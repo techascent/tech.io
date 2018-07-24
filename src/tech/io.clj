@@ -6,7 +6,8 @@
             [think.resource.core :as resource])
   (:import [tech.io.protocols IOProvider]
            [java.io File OutputStream
-            ByteArrayOutputStream ByteArrayInputStream]))
+            ByteArrayOutputStream ByteArrayInputStream]
+           [java.util Date]))
 
 
 (defn- io-input-stream
@@ -152,6 +153,11 @@
        (safe-doall-streams #(.write ^OutputStream % b off len) streams)))))
 
 
+(defn- date-before?
+  [^Date d1 ^Date d2]
+  (< (.getTime d1)
+     (.getTime d2)))
+
 
 ;;Provider built for static or append-only datasets.  Very limited ability to handle
 ;;changing datasets.  Also has no full-threshold; will write until cache-provider runs out of space.
@@ -162,11 +168,15 @@
           cache-options (merge default-options options)]
       (when-not (or (io-prot/exists? cache-provider cache-parts options)
                     (if (:cache-check-metadata-on-read? cache-options)
-                      (= (:modify-date (io-prot/meta-data cache-provider cache-parts cache-options))
-                         (:modify-date (io-prot/meta-data src-provider url-parts options)))
+                      (date-before? (:modify-date (io-prot/meta-data cache-provider cache-parts cache-options))
+                                    (:modify-date (io-prot/meta-data src-provider url-parts options)))
                       true))
         (with-open [in-s (io-prot/input-stream src-provider url-parts options)
-                    out-s (io-prot/output-stream! src-provider url-parts (merge default-options options))]
+                    out-s (io-prot/output-stream! src-provider url-parts (merge default-options options
+                                                                                {:meta-data (io-prot/meta-data
+                                                                                             src-provider
+                                                                                             url-parts
+                                                                                             options)}))]
           (io/copy in-s out-s)))
       (io-prot/input-stream cache-provider cache-parts options)))
   (output-stream! [provider url-parts options]
