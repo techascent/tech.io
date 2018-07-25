@@ -15,9 +15,11 @@ Defaults to non recursive, pass in recursive? true in options if recursive behav
 desired.")
   (delete! [provider url-parts options]
     "Recursive delete.  No option for non recursive as would require an ls type check in general.")
-  (meta-data [provider url-parts options]
-    "At least modify date if anything:
-{:modify-date (Date.)"))
+  (metadata [provider url-parts options]
+    "At least modify date.  Potentially byte-length.
+:modify-date (required) (Date.)
+:create-date (optional) (Date.)
+:byte-length (optional) long"))
 
 
 (defmulti url-parts->provider

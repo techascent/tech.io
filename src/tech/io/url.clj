@@ -45,7 +45,12 @@
       false)))
 
 
+(defn string-seq->file-path
+  [str-seq]
+  (s/join File/separator str-seq))
+
+
 (defn parts->file-path
   [{:keys [protocol path arguments]}]
   ;;Windows will need something else here.
-  (s/join File/separator path))
+  (string-seq->file-path path))
