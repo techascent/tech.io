@@ -140,7 +140,15 @@
   (delete! [provider url-parts options]
     (io-prot/delete! (url-parts->provider url-parts) url-parts (merge default-options options)))
   (metadata [provider url-parts options]
-    (io-prot/metadata (url-parts->provider url-parts) url-parts (merge default-options options))))
+    (io-prot/metadata (url-parts->provider url-parts) url-parts (merge default-options options)))
+
+  io-prot/ICopyObject
+  (get-object [provider url-parts options]
+    (io-prot/get-object (url-parts->provider url-parts) url-parts
+                        (merge default-options options)))
+  (put-object! [provider url-parts value options]
+    (io-prot/put-object! (url-parts->provider url-parts) url-parts value
+                         (merge default-options options))))
 
 
 (defn url-parts->file-cache

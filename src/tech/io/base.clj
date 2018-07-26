@@ -91,11 +91,13 @@
   File
   (get-object [provider url-parts options] (parts->file url-parts))
   (put-object! [provider url-parts value options]
-    ;;A short bit ot looking around makes it appear that stream copy
-    ;;is fastest for files.
-    (with-open [in-s (io/input-stream value)
-                out-s (io-output-stream (parts->file url-parts) options)]
-      (io/copy in-s out-s))))
+    (let [fileme (parts->file url-parts)]
+      (io/make-parents fileme)
+      ;;A short bit ot looking around makes it appear that stream copy
+      ;;is fastest for files.
+      (with-open [in-s (io/input-stream value)
+                  out-s (io/output-stream fileme)]
+        (io/copy in-s out-s)))))
 
 
 (defmethod io-prot/url-parts->provider :default

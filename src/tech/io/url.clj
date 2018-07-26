@@ -39,10 +39,12 @@
 
 (defn url?
   [url]
-  (try
-    (:protocol (url->parts url))
-    (catch Throwable e
-      false)))
+  (if (string? url)
+    (try
+      (:protocol (url->parts url))
+      (catch Throwable e
+        false))
+    false))
 
 
 (defn string-seq->file-path
