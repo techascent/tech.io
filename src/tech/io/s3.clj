@@ -4,7 +4,8 @@
             [clojure.java.io :as io]
             [tech.io.url :as url]
             [tech.io.protocols :as io-prot]
-            [clojure.string :as s])
+            [clojure.string :as s]
+            [taoensso.timbre :as log])
   (:import [com.amazonaws.services.s3.model AmazonS3Exception]
            [java.nio.file Files Path FileSystems Paths]
            [java.io File ByteArrayOutputStream OutputStream]
@@ -194,11 +195,16 @@ or the write fails."
     (let [byte-stream (ByteArrayOutputStream.)]
       (proxy [OutputStream] []
           (close
-           []
-           (put-object (url-parts->bucket url-parts)
-                       (url-parts->key url-parts)
-                       (.toByteArray byte-stream)
-                       (merge default-options options)))
+            []
+            (let [byte-data (.toByteArray byte-stream)]
+              (put-object (url-parts->bucket url-parts)
+                          (url-parts->key url-parts)
+                          byte-data
+                          (merge default-options options))
+              (when-let [log-level (::log-level options)]
+                (log/log log-level (format "s3 write: %s: %s bytes"
+                                           (url/parts->url url-parts)
+                                           (alength byte-data))))))
         (flush
           [])
         (write
