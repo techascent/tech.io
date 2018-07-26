@@ -32,7 +32,6 @@
     (apply io/input-stream url options)))
 
 
-
 (defn output-stream!
   [url & options]
   (if (url/url? url)

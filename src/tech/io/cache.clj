@@ -121,9 +121,12 @@
                          value
                          (merge default-options options)))
 
-  io-prot/IUrlCache
-  (url->cache-url [provider url-parts options]
-    (url-parts->cache-parts-fn url-parts)))
+  io-prot/IUrlRedirect
+  (url->redirect-url [provider url]
+    (-> url
+        url/url->parts
+        url-parts->cache-parts-fn
+        url/parts->url)))
 
 
 ;;Generically forward everything to wherever the url points.
@@ -150,6 +153,12 @@
     (io-prot/put-object! (url-parts->provider url-parts) url-parts value
                          (merge default-options options))))
 
+(defn forwarding-provider
+  [& {:keys [url-parts->provider]
+      :or {url-parts->provider io-prot/url-parts->provider}
+      :as options}]
+  (->ForwardingProvider url-parts->provider (dissoc options :url-parts->provider)))
+
 
 (defn url-parts->file-cache
   [cache-dir url-parts]
@@ -168,8 +177,8 @@
               :as cache-options}]
   (let [url-parts->cache-parts (partial url-parts->file-cache cache-dir)]
     (->CacheProvider url-parts->cache-parts
-                     (->ForwardingProvider io-prot/url-parts->provider {})
-                     (or src-provider (->ForwardingProvider io-prot/url-parts->provider {}))
+                     (forwarding-provider)
+                     (or src-provider (forwarding-provider))
                      (merge cache-options
                             {::cache-check-metadata-on-read? cache-check-metadata-on-read?
                              ::cache-write-through? cache-write-through?}))))

@@ -41,5 +41,6 @@ io/copy the FileInputStream specifically if using amazon's s3 system."))
     (:protocol url-parts)))
 
 
-(defprotocol IUrlCache
-  (url->cache-url [provider url-parts options]))
+(defprotocol IUrlRedirect
+  "Testing interface"
+  (url->redirect-url [provider url]))

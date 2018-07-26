@@ -26,7 +26,12 @@
 (defrecord ResourceFile [path-or-file]
   resource/PResource
   (release-resource [this]
-    (fs/delete-dir path-or-file)))
+    (let [path-or-file
+          (if (url/url? path-or-file)
+            (url/parts->file-path
+             (url/url->parts path-or-file))
+            path-or-file)]
+      (fs/delete-dir path-or-file))))
 
 
 (defn watch-file-for-delete
@@ -38,10 +43,10 @@
 (defn random-temp-dir
   [& {:keys [root]
       :or {root (System/getProperty "java.io.tmpdir")}}]
-  (let [resource-dir (->ResourceDir (random-temp-dir-str root))
+  (let [resource-dir (->ResourceFile (random-temp-dir-str root))
         retval (:path-or-file resource-dir)]
     (fs/mkdirs retval)
-    (watch-for-delete retval)))
+    (watch-file-for-delete retval)))
 
 
 (defmacro with-temp-dir

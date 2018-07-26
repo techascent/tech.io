@@ -1,4 +1,4 @@
-(defproject techasent/tech.io "0.1.0-SNAPSHOT"
+(defproject techasent/tech.io "0.1.1-SNAPSHOT"
   :description "IO abstractions to enable rapid research and prototyping."
   :url "http://github.com/tech-ascent/tech.io"
   :license {:name "Eclipse Public License"
