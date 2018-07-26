@@ -2,10 +2,11 @@
   (:require [amazonica.aws.s3 :as s3]
             [amazonica.aws.s3transfer :as s3transfer]
             [clojure.java.io :as io]
+            [clojure.string :as s]
+            [taoensso.timbre :as log]
             [tech.io.url :as url]
             [tech.io.protocols :as io-prot]
-            [clojure.string :as s]
-            [taoensso.timbre :as log])
+            [tech.io.base :as base])
   (:import [com.amazonaws.services.s3.model AmazonS3Exception]
            [java.nio.file Files Path FileSystems Paths]
            [java.io File ByteArrayOutputStream OutputStream]
@@ -75,7 +76,7 @@
     (.digest digest byte-data)))
 
 
-(defn put-object
+(defn put-object!
   "Lots of smarts around put-object to ensure the entire object is written correctly
 or the write fails."
   [bucket k v {:keys [::metadata ::verify-md5?]
@@ -116,7 +117,7 @@ or the write fails."
       result)))
 
 
-(defn delete-object
+(defn delete-object!
   [bucket k options]
   (call-s3-fn s3/delete-object {:bucket-name bucket
                                 :key k}
@@ -197,14 +198,7 @@ or the write fails."
           (close
             []
             (let [byte-data (.toByteArray byte-stream)]
-              (put-object (url-parts->bucket url-parts)
-                          (url-parts->key url-parts)
-                          byte-data
-                          (merge default-options options))
-              (when-let [log-level (::log-level options)]
-                (log/log log-level (format "s3 write: %s: %s bytes"
-                                           (url/parts->url url-parts)
-                                           (alength byte-data))))))
+              (io-prot/put-object! provider url-parts byte-data (merge default-options options))))
         (flush
           [])
         (write
@@ -220,12 +214,16 @@ or the write fails."
       true
       (catch Throwable e
         false)))
-  (ls [provider url-parts {:keys [::delimiter]
-                           :or {delimiter "/"}
+  (ls [provider url-parts {:keys [::delimiter recursive?]
+                           :or {delimiter "/"
+                                recursive? false}
                            :as options}]
     (let [bucket (url-parts->bucket url-parts)
           key (url-parts->key url-parts)
-          options (merge default-options (assoc options ::delimiter delimiter))
+          ;;If you want a recursive search then you pass in recursive? options
+          options (if (:recursive? options)
+                    (merge default-options options)
+                    (merge default-options (assoc options ::delimiter delimiter)))
           key (if (and delimiter
                        (not (.endsWith key delimiter))
                        (> (count key) 0))
@@ -241,9 +239,9 @@ or the write fails."
                    (when size
                      {:byte-length size})))))))
   (delete! [provider url-parts options]
-    (delete-object (url-parts->bucket url-parts)
-                   (url-parts->key url-parts)
-                   (merge default-options options)))
+    (delete-object! (url-parts->bucket url-parts)
+                    (url-parts->key url-parts)
+                    (merge default-options options)))
   (metadata [provider url-parts options]
     (let [{:keys [content-length last-modified content-type]}
           (get-object-metadata (url-parts->bucket url-parts)
@@ -253,7 +251,31 @@ or the write fails."
        {:byte-length (long content-length)
         :modify-date (.toDate ^DateTime last-modified)}
        (when content-type
-         {:content-type content-type})))))
+         {:content-type content-type}))))
+
+  io-prot/ICopyObject
+  (get-object [provider url-parts options]
+    (io-prot/input-stream provider url-parts options))
+
+  (put-object! [provider url-parts value options]
+    (put-object! (url-parts->bucket url-parts)
+                 (url-parts->key url-parts)
+                 value
+                 (merge default-options options))
+    (let [log-level (::log-level options)
+          item-length (cond
+                        (bytes? value)
+                        (alength ^bytes value)
+                        (instance? File value)
+                        (:byte-length (base/file->byte-length value))
+                        :else
+                        nil)]
+      (when log-level
+        (if item-length
+          (log/log log-level (format "s3 write: %s: %s bytes"
+                                     (url/parts->url url-parts)
+                                     item-length))
+          (log/log log-level (format "s3 write: %s" (url/parts->url url-parts))))))))
 
 
 (defmethod io-prot/url-parts->provider :s3

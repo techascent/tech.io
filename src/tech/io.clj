@@ -41,10 +41,26 @@
     (apply io/output-stream url options)))
 
 
-(defn ls
+(defn get-object
+  "Get object always returns something convertible to a stream.
+It may return a file for instance."
   [url & options]
   (with-provider url
-    (io-prot/ls provider url-parts (args->map options))))
+    (io-prot/get-object provider url-parts (args->map options))))
+
+
+(defn put-object!
+  [url value & options]
+  (with-provider url
+    (io-prot/put-object! provider url-parts value (args->map options))))
+
+
+(defn ls
+  [url & {:keys [recursive?] :as options}]
+  (with-provider url
+    (io-prot/ls provider url-parts
+                (assoc (args->map options)
+                       :recursive? recursive?))))
 
 
 (defn delete!
@@ -60,6 +76,8 @@
 
 
 (defn metadata
+  "If supported, returns at least :modify-date and :byte-length.
+Exception otherwise."
   [url & options]
   (with-provider url
     (io-prot/metadata provider url-parts options)))

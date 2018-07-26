@@ -27,10 +27,17 @@
       (Date.)))
 
 
-(defn- file->byte-length
+(defn file->byte-length
   ^long [^File file]
   (-> (.toPath file)
       Files/size))
+
+
+(defn- parts->file
+  [url-parts]
+  (when-not (= :file (:protocol url-parts))
+    (throw (ex-info "Not a file" url-parts)))
+  (io/file (url/parts->file-path url-parts)))
 
 
 (extend-protocol io-prot/IOProvider
@@ -50,22 +57,45 @@
 
   File
   (input-stream [this url-parts options]
-    (io/make-input-stream this options))
+    (io/make-input-stream (parts->file url-parts) options))
   (output-stream! [this url-parts options]
-    (io/make-parents this)
-    (io/make-output-stream this options))
+    (let [fileme (parts->file url-parts)]
+      (io/make-parents fileme)
+      (io/make-output-stream fileme options)))
   (exists? [this url-parts options]
     (.exists ^File this))
   (ls [this url-parts options]
-    (->> (fs/list-dir this)
-         (map (fn [^File f]
-                {:url (str "file://" (.toString f))
-                 :directory? (.isDirectory f)}))))
+    (let [fileme (parts->file url-parts)]
+      (->> (if (:recursive? options)
+             (file-seq fileme)
+             (fs/list-dir fileme))
+           (map (fn [^File f]
+                  {:url (str "file://" (.toString f))
+                   :directory? (.isDirectory f)})))))
   (delete! [this url-parts options]
     (fs/delete-dir this))
   (metadata [provider url-parts options]
     {:modify-date (file->last-modify-time provider)
      :byte-length (file->byte-length provider)}))
+
+
+(extend-protocol io-prot/ICopyObject
+  Object
+  (get-object [provider url-parts options]
+    (io-prot/input-stream provider url-parts options))
+  (put-object! [provider url-parts value options]
+    (with-open [in-s (io/input-stream value)
+                out-s (io-prot/output-stream! provider url-parts options)]
+      (io/copy in-s out-s)))
+
+  File
+  (get-object [provider url-parts options] (parts->file url-parts))
+  (put-object! [provider url-parts value options]
+    ;;A short bit ot looking around makes it appear that stream copy
+    ;;is fastest for files.
+    (with-open [in-s (io/input-stream value)
+                out-s (io-output-stream (parts->file url-parts) options)]
+      (io/copy in-s out-s))))
 
 
 (defmethod io-prot/url-parts->provider :default
@@ -75,4 +105,4 @@
 
 (defmethod io-prot/url-parts->provider :file
   [url-parts]
-  (io/file (url/parts->file-path url-parts)))
+  (parts->file url-parts))

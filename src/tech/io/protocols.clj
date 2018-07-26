@@ -21,6 +21,20 @@ desired.")
 :byte-length (optional) long"))
 
 
+(defprotocol ICopyObject
+  "Interface that allows optimized implementations assuming you want to copy an thing.
+Default implementation is provided so it is optional from a provider's perspective."
+  (get-object [provider url-parts options]
+    "Get an object that is either an input stream or convertible to
+an input stream.  For example, if you are using file-caching then
+this will return a file that points to the cached data.  This allows easier
+usage of 3rd party API's that must take files.")
+  (put-object! [provider url-parts value options]
+    "Putting an object gives the underlying provider more information than does requesting
+a stream.  It may be significantly more efficient, for example, to put-object! a file rather than
+io/copy the FileInputStream specifically if using amazon's s3 system."))
+
+
 (defmulti url-parts->provider
   "Static conversion of a protocol to a provider."
   (fn [url-parts]

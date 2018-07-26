@@ -44,27 +44,27 @@
      (.getTime d2)))
 
 
+(defn- maybe-cache-stream
+  [url-parts options cache-parts cache-options cache-provider src-provider]
+  (let [missing? (not (io-prot/exists? cache-provider cache-parts options))]
+    (when (or missing?
+              (if (::cache-check-metadata-on-read? cache-options)
+                (date-before? (:modify-date (io-prot/metadata cache-provider cache-parts cache-options))
+                              (:modify-date (io-prot/metadata src-provider url-parts options)))
+                true))
+      (io-prot/put-object! cache-provider cache-parts
+                           (io-prot/get-object src-provider url-parts options)
+                           cache-options))))
+
+
 ;;Provider built for static or append-only datasets.  Very limited ability to handle
 ;;changing datasets.  Also has no full-threshold; will write until cache-provider runs out of space.
 (defrecord CacheProvider [url-parts->cache-parts-fn cache-provider src-provider default-options]
   io-prot/IOProvider
   (input-stream [provider url-parts options]
     (let [cache-parts (url-parts->cache-parts-fn url-parts)
-          cache-options (merge default-options options)
-          missing? (not (io-prot/exists? cache-provider cache-parts options))]
-      (when (or missing?
-                (if (:cache-check-metadata-on-read? cache-options)
-                  (date-before? (:modify-date (io-prot/metadata cache-provider cache-parts cache-options))
-                                (:modify-date (io-prot/metadata src-provider url-parts options)))
-                  true))
-        (with-open [in-s (io-prot/input-stream src-provider url-parts options)
-                    out-s (io-prot/output-stream! cache-provider cache-parts
-                                                  (merge default-options options
-                                                         {:metadata (io-prot/metadata
-                                                                     src-provider
-                                                                     url-parts
-                                                                     options)}))]
-          (io/copy in-s out-s)))
+          cache-options (merge default-options options)]
+      (maybe-cache-stream url-parts options cache-parts cache-options cache-provider src-provider)
       (io-prot/input-stream cache-provider cache-parts options)))
   (output-stream! [provider url-parts options]
     (let [cache-parts (url-parts->cache-parts-fn url-parts)
@@ -72,14 +72,13 @@
                                              cache-provider
                                              cache-parts
                                              (merge default-options options))]
-      (if (:cache-write-through? (merge default-options options))
+      (if (::cache-write-through? (merge default-options options))
         (let [src-output-stream (io-prot/output-stream!
                                  src-provider
                                  url-parts
                                  options)]
           (combined-output-streams [src-output-stream cache-output-stream]))
         cache-output-stream)))
-
   (exists? [provider url-parts options]
     (let [cache-parts (url-parts->cache-parts-fn url-parts)
           cache-options (merge default-options options)]
@@ -93,7 +92,6 @@
     (io-prot/ls src-provider
                 url-parts
                 options))
-
   (delete! [provider url-parts options]
     (->> [[src-provider url-parts options]
           [cache-provider
@@ -103,12 +101,25 @@
                                (io-prot/delete! provider
                                                 url-parts
                                                 options)))))
-
   (metadata [provider url-parts options]
     (or (io-prot/metadata cache-provider
                            (url-parts->cache-parts-fn url-parts)
                            (merge default-options options))
         (io-prot/metadata src-provider url-parts options)))
+
+  io-prot/ICopyObject
+  (get-object [provider url-parts options]
+    (let [cache-parts (url-parts->cache-parts-fn url-parts)
+          cache-options (merge default-options options)]
+      (maybe-cache-stream url-parts options cache-parts cache-options cache-provider src-provider)
+      (io-prot/get-object cache-provider cache-parts cache-options)))
+  (put-object! [provider url-parts value options]
+    (when (::cache-write-through? (merge default-options options))
+      (io-prot/put-object! src-provider url-parts value options))
+    (io-prot/put-object! cache-provider
+                         (url-parts->cache-parts-fn url-parts)
+                         value
+                         (merge default-options options)))
 
   io-prot/IUrlCache
   (url->cache-url [provider url-parts options]
@@ -142,8 +153,8 @@
 
 (defn create-file-cache
   [cache-dir {:keys [src-provider
-                     cache-check-metadata-on-read?
-                     cache-write-through?]
+                     ::cache-check-metadata-on-read?
+                     ::cache-write-through?]
               :or {cache-check-metadata-on-read? true
                    cache-write-through? true}
               :as cache-options}]
@@ -152,5 +163,5 @@
                      (->ForwardingProvider io-prot/url-parts->provider {})
                      (or src-provider (->ForwardingProvider io-prot/url-parts->provider {}))
                      (merge cache-options
-                            {:cache-check-metadata-on-read? cache-check-metadata-on-read?
-                             :cache-write-through? cache-write-through?}))))
+                            {::cache-check-metadata-on-read? cache-check-metadata-on-read?
+                             ::cache-write-through? cache-write-through?}))))
