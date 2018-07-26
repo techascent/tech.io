@@ -214,15 +214,24 @@ or the write fails."
       true
       (catch Throwable e
         false)))
-  (ls [provider url-parts options]
-    (let [bucket (url-parts->bucket url-parts)]
+  (ls [provider url-parts {:keys [::delimiter]
+                           :or {delimiter "/"}
+                           :as options}]
+    (let [bucket (url-parts->bucket url-parts)
+          key (url-parts->key url-parts)
+          options (merge default-options (assoc options ::delimiter delimiter))
+          key (if (and delimiter
+                       (not (.endsWith key delimiter))
+                       (> (count key) 0))
+                (str key delimiter)
+                key)]
       (->> (list-objects (url-parts->bucket url-parts)
-                         (url-parts->key url-parts)
+                         key
                          (merge default-options options))
            (map (fn [{:keys [key size directory?]}]
                   (merge
                    {:url (str "s3://" bucket "/" key )
-                    :directory? directory?}
+                    :directory? (boolean directory?)}
                    (when size
                      {:byte-length size})))))))
   (delete! [provider url-parts options]
