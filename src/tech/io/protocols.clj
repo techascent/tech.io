@@ -18,7 +18,6 @@ desired.")
   (metadata [provider url-parts options]
     "At least modify date.  Potentially byte-length.
 :modify-date (required) (Date.)
-:create-date (optional) (Date.)
 :byte-length (optional) long"))
 
 

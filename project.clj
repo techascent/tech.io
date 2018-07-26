@@ -19,4 +19,5 @@
                  [com.amazonaws/aws-java-sdk-s3 "1.11.341"]
                  [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.9.0"]
                  [com.fasterxml.jackson.core/jackson-databind "2.9.0"]
-                 [me.raynes/fs "1.4.6"]])
+                 [me.raynes/fs "1.4.6"]
+                 [com.taoensso/nippy "2.14.0"]])
