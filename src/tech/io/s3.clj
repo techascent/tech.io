@@ -159,7 +159,7 @@ or the write fails."
     (concat (->> (:common-prefixes (first retval-seq))
                  (map (fn [prefix]
                         {:bucket-name bucket
-                         :key (str prefix delimiter)
+                         :key prefix
                          :directory? true})))
             (mapcat :object-summaries retval-seq))))
 
@@ -215,24 +215,30 @@ or the write fails."
       (catch Throwable e
         false)))
   (ls [provider url-parts options]
-    (->> (list-objects (url-parts->bucket url-parts)
-                       (url-parts->key url-parts)
-                       (merge default-options options))
-         (map (fn [{:keys [bucket key size directory?]}]
-                {:url (str "s3://" bucket "/" key )
-                 :directory? directory?
-                 :byte-length size}))))
+    (let [bucket (url-parts->bucket url-parts)]
+      (->> (list-objects (url-parts->bucket url-parts)
+                         (url-parts->key url-parts)
+                         (merge default-options options))
+           (map (fn [{:keys [key size directory?]}]
+                  (merge
+                   {:url (str "s3://" bucket "/" key )
+                    :directory? directory?}
+                   (when size
+                     {:byte-length size})))))))
   (delete! [provider url-parts options]
     (delete-object (url-parts->bucket url-parts)
                    (url-parts->key url-parts)
                    (merge default-options options)))
   (metadata [provider url-parts options]
-    (let [{:keys [content-length last-modified]}
+    (let [{:keys [content-length last-modified content-type]}
           (get-object-metadata (url-parts->bucket url-parts)
                                (url-parts->key url-parts)
                                (merge default-options options))]
-      {:byte-length (long content-length)
-       :modify-date (.toDate ^DateTime last-modified)})))
+      (merge
+       {:byte-length (long content-length)
+        :modify-date (.toDate ^DateTime last-modified)}
+       (when content-type
+         {:content-type content-type})))))
 
 
 (defmethod io-prot/url-parts->provider :s3
