@@ -10,7 +10,7 @@ Simple IO library to enable rapid development on at least files, http/https, s3 
 The intention is to provide a simple and minimal base io abstraction and then add capabilities via chaining
 and layering abstractions.
 
-The base abstraction is the [IOProvider](src/tech/io/protcocols.clj).  There are basic implementations
+The base abstraction is the [IOProvider](src/tech/io/protocols.clj).  There are basic implementations
 of this abstraction in [base.clj](src/tech/io/base.clj).  An [aws s3](src/tech/io/s3.clj) layer is also provided.
 
 Given this abstraction we can implement a [caching](src/tech/io/cache.clj) layer which will cache anything to a defined point
