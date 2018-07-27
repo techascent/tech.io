@@ -1,4 +1,5 @@
 (ns tech.io.s3
+  "Access to s3 resources via the io provider abstraction"
   (:require [amazonica.aws.s3 :as s3]
             [amazonica.aws.s3transfer :as s3transfer]
             [clojure.java.io :as io]
@@ -10,7 +11,7 @@
   (:import [com.amazonaws.services.s3.model AmazonS3Exception]
            [java.nio.file Files Path FileSystems Paths]
            [java.io File ByteArrayOutputStream OutputStream]
-           [com.amazonaws.util BinaryUtils Md5Utils]
+           [java.util Base64]
            [java.security MessageDigest]
            [org.joda.time DateTime]))
 
@@ -71,14 +72,21 @@
 (def empty-file-md5 "1B2M2Y8AsgTpgAmY7PhCfg==")
 
 (defn byte-array-to-md5
-  [^"[B" byte-data]
+  ^bytes [^bytes byte-data]
   (let [digest (MessageDigest/getInstance "MD5")]
     (.digest digest byte-data)))
 
 
+(defn- base-64-encode
+  ^String [^bytes byte-data]
+  (String. (.encode (Base64/getEncoder) byte-data)))
+
+
 (defn put-object!
   "Lots of smarts around put-object to ensure the entire object is written correctly
-or the write fails."
+or the write fails.  We check md5 hash if possible and we attempt to set the content type
+in order to ensure that if, for instance, you write a jpeg to an open bucket that jpeg
+is accessible via the browser using a normal https request."
   [bucket k v {:keys [::metadata ::verify-md5?]
                :or {metadata {}}
                :as options}]
@@ -89,7 +97,7 @@ or the write fails."
                                            (.close temp-stream)
                                            (.toByteArray temp-stream))
                                          v)
-                             md5-str (BinaryUtils/toBase64 (byte-array-to-md5 byte-data))]
+                             md5-str (base-64-encode (byte-array-to-md5 byte-data))]
                          [(merge {:content-length (count byte-data)
                                   :content-md5 md5-str})
                           byte-data])

@@ -34,6 +34,8 @@
 
 
 (defn create-file-provider
+  "Redirect all protocols to access file system.  Useful if you want to, for instance,
+mock up s3 but only using local filesystem."
   [cache-dir {:keys [src-provider]
               :as redirect-options}]
   (->RedirectProvider (partial io-cache/url-parts->file-cache cache-dir)

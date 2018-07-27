@@ -1,4 +1,5 @@
 (ns tech.io.edn
+  "Get/put edn data to/from any valid io provider"
   (:require [taoensso.nippy :as nippy]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
@@ -29,7 +30,7 @@
     (.toByteArray byte-s)))
 
 
-(defn put-edn
+(defn put-edn!
   [provider url-parts data options]
   (with-open [out-s (io-prot/output-stream! provider url-parts options)]
     (.write out-s (edn->bytes data))))
@@ -43,7 +44,7 @@
       (edn/read-string)))
 
 
-(defn put-nippy
+(defn put-nippy!
   [provider url-parts data options]
   (with-open [out-s (io-prot/output-stream! provider url-parts options)]
     ;;Writing frozen data is faster and leads to higher compression ratios than using

@@ -1,4 +1,5 @@
 (ns tech.io.uuid
+  "Utility for working with uuids"
   (:import [java.util UUID]))
 
 

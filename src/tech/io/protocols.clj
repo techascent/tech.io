@@ -3,7 +3,7 @@
 
 
 (defprotocol IOProvider
-  "Base stream and"
+  "Base stream and resource abstraction"
   (input-stream [provider url-parts options])
   (output-stream! [provider url-parts options])
   (exists? [provider url-parts options])
