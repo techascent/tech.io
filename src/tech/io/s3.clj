@@ -278,6 +278,30 @@ or the write fails."
           (log/log log-level (format "s3 write: %s" (url/parts->url url-parts))))))))
 
 
+(defn s3-provider
+  [default-options]
+  (->S3Provider default-options))
+
+
 (defmethod io-prot/url-parts->provider :s3
   [& args]
   (->S3Provider {}))
+
+
+(defn s3-bucket-and-key->https-url
+  [s3-bucket s3-key & {:keys [::endpoint]
+                       :or {endpoint "us-west-2"}
+                       :as options}]
+  (format "https://s3-%s.amazonaws.com/%s/%s" endpoint s3-bucket s3-key))
+
+
+(defn s3-url->https-url
+  [s3-url & {:keys [::endpoint]
+             :or {endpoint "us-west-2"}
+             :as options}]
+  (let [{:keys [protocol path] :as url-parts} (url/url->parts s3-url)
+        bucket (url-parts->bucket url-parts)
+        key (url-parts->key url-parts)]
+    (when-not (= :s3 protocol)
+      (throw (ex-info "Url is not an s3 url" url-parts)))
+    (s3-bucket-and-key->https-url bucket key ::endpoint endpoint)))
