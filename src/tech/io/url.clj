@@ -53,6 +53,7 @@
 
 
 (defn parts->file-path
-  [{:keys [protocol path arguments]}]
-  ;;Windows will need something else here.
+  [{:keys [protocol path arguments] :as url-parts}]
+  (when-not (= protocol :file)
+    (throw (ex-info "Not a file url" url-parts)))
   (string-seq->file-path path))

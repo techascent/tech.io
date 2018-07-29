@@ -130,3 +130,13 @@ Exception otherwise."
   "Forwards to clojure.java.io/copy"
   [& args]
   (apply io/copy args))
+
+
+(defn file
+  "Wrapper around "
+  [path-or-url]
+  (let [filepath (if (url/url? path-or-url)
+                   (-> (url/url->parts path-or-url)
+                       url/parts->file-path)
+                   path-or-url)]
+    (io/file filepath)))

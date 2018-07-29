@@ -40,9 +40,14 @@
   path-or-file)
 
 
+(defn system-temp-dir
+  []
+  (System/getProperty "java.io.tmpdir"))
+
+
 (defn random-temp-dir
   [& {:keys [root]
-      :or {root (System/getProperty "java.io.tmpdir")}}]
+      :or {root (system-temp-dir)}}]
   (let [resource-dir (->ResourceFile (random-temp-dir-str root))
         retval (:path-or-file resource-dir)]
     (fs/mkdirs retval)
@@ -59,7 +64,8 @@ that will be removed when the code completes (or throws an exception)."
 
 
 (defn random-file-url
-  [dirname & [suffix]]
+  [& {:keys  [dirname suffix]
+      :or {dirname (system-temp-dir)}}]
   (url/parts->url {:protocol :file
                    :path (concat
                           (s/split dirname (re-pattern "/\\\\"))
