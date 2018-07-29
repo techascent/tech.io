@@ -124,3 +124,9 @@ Exception otherwise."
   [url & options]
   (with-provider url
     (edn/get-nippy provider url-parts (args->map options))))
+
+
+(defn copy
+  "Forwards to clojure.java.io/copy"
+  [& args]
+  (apply io/copy args))
