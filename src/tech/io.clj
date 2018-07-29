@@ -5,11 +5,16 @@ of clojure.java.io."
             [tech.io.url :as url]
             [tech.io.protocols :as io-prot]
             [tech.io.edn :as edn]
-            [tech.io.base]))
+            [tech.io.base]
+            [tech.config.core :as config]))
 
-;;Purists or poeple using components will want to use the io-protocols directly with providers passed in.
-;;This API is meant to mimic clojure.java.io but in a more extensible way.
-(def ^:dynamic *provider* nil)
+;;Purists or poeple using components will want to use the io-protocols directly with providers
+;;passed in.  This API is meant to mimic clojure.java.io but in a more extensible way.
+(def ^:dynamic *provider* (when (config/get-config :tech-io-cache-local)
+                            (require 'tech.io.cache)
+                            ((resolve 'tech.io.cache/create-file-cache)
+                             (config/get-config :tech-io-cache-dir)
+                             {})))
 
 (defmacro with-provider
   [url & body]
