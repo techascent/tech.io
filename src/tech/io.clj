@@ -126,12 +126,6 @@ Exception otherwise."
     (edn/get-nippy provider url-parts (args->map options))))
 
 
-(defn copy
-  "Forwards to clojure.java.io/copy"
-  [& args]
-  (apply io/copy args))
-
-
 (defn file
   "Wrapper around "
   [path-or-url]
@@ -140,3 +134,9 @@ Exception otherwise."
                        url/parts->file-path)
                    path-or-url)]
     (io/file filepath)))
+
+;;Straight forwards
+(def copy io/copy)
+(def reader io/reader)
+(def writer io/writer)
+(def make-parents io/make-parents)
