@@ -1,4 +1,4 @@
-(defproject techascent/tech.io "0.1.9"
+(defproject techascent/tech.io "0.1.10-SNAPSHOT"
   :description "IO abstractions to enable rapid research and prototyping."
   :url "http://github.com/tech-ascent/tech.io"
   :license {:name "Eclipse Public License"
@@ -21,4 +21,8 @@
                  [me.raynes/fs "1.4.6"]
                  [com.taoensso/nippy "2.14.0"]
                  [com.taoensso/timbre "4.10.0"]
-                 [techascent/tech.config "0.3.5"]])
+                 [techascent/tech.config "0.3.5"]
+                 [org.clojure/core.async "0.3.465"]
+                 [com.stuartsierra/component "0.3.2"]]
+
+  :profiles {:dev {:dependencies [[techascent/vault-clj "0.2.17"]]}})
