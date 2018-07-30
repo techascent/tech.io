@@ -6,7 +6,10 @@ of clojure.java.io."
             [tech.io.protocols :as io-prot]
             [tech.io.edn :as edn]
             [tech.io.base]
-            [tech.config.core :as config]))
+            [tech.config.core :as config]
+            [tech.io.temp-file :as temp-file]
+            [think.resource.core :as resource])
+  (:import [javax.imageio ImageIO]))
 
 ;;Purists or poeple using components will want to use the io-protocols directly with providers
 ;;passed in.  This API is meant to mimic clojure.java.io but in a more extensible way.
@@ -135,8 +138,31 @@ Exception otherwise."
                    path-or-url)]
     (io/file filepath)))
 
+(defn copy
+  [src dest & args]
+  (with-open [in-s (apply input-stream src args)
+              out-s (apply output-stream! dest args)]
+    (io/copy in-s out-s)))
+
+
 ;;Straight forwards
-(def copy io/copy)
 (def reader io/reader)
 (def writer io/writer)
 (def make-parents io/make-parents)
+
+
+(defn get-image
+  [path-or-url]
+  (resource/with-resource-context
+    (let [temp (temp-file/watch-file-for-delete
+                (temp-file/random-file-url))]
+      (copy path-or-url temp)
+      (ImageIO/read (file temp)))))
+
+
+(defn put-image!
+  "Will throw if an image with transparency is used to write a jpeg"
+  [image path-or-url & {:as options}]
+  (let [path-ext (url/extension path-or-url)]
+    (with-open [out-s (output-stream! path-or-url)]
+      (ImageIO/write image path-ext out-s))))

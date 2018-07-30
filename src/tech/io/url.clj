@@ -57,3 +57,8 @@
   (when-not (= protocol :file)
     (throw (ex-info "Not a file url" url-parts)))
   (string-seq->file-path path))
+
+
+(defn extension
+  ^String [^String str-url]
+  (.substring str-url (+ 1 (.lastIndexOf str-url "."))))
