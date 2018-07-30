@@ -296,6 +296,11 @@ is accessible via the browser using a normal https request."
   (->S3Provider {}))
 
 
+(defn s3-bucket-key->url
+  [bucket key]
+  (str "s3://" bucket "/" key))
+
+
 (defn s3-bucket-and-key->https-url
   [s3-bucket s3-key & {:keys [::endpoint]
                        :or {endpoint "us-west-2"}

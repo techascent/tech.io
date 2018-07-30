@@ -54,7 +54,7 @@
 
 (defn get-nippy
   [provider url-parts options]
-  (with-open [in-s (io-prot/output-stream! provider url-parts options)
+  (with-open [in-s (io-prot/input-stream provider url-parts options)
               byte-s (ByteArrayOutputStream.)]
     (io/copy in-s byte-s)
     (nippy/thaw (.toByteArray byte-s))))

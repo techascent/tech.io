@@ -64,9 +64,15 @@ that will be removed when the code completes (or throws an exception)."
 
 
 (defn random-file-url
-  [& {:keys  [dirname suffix]
-      :or {dirname (system-temp-dir)}}]
+  [& {:keys  [dirname suffix]}]
   (url/parts->url {:protocol :file
                    :path (concat
-                          (s/split dirname (re-pattern "/\\\\"))
+                          (s/split (or dirname (system-temp-dir)) (re-pattern "/\\\\"))
                           [(format "%s%s" (uuid/random-uuid-str) (or suffix ""))])}))
+
+
+(defn temp-resource-file
+  "Get a temp file location that will be delete when the resource context unwinds"
+  [& {:keys [dirname suffix]}]
+  (-> (random-file-url :dirname dirname :suffix suffix)
+      (watch-file-for-delete)))
