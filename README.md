@@ -7,6 +7,21 @@ Simple IO library to enable rapid development on at least files, http/https, s3 
 
 ## Design
 
+The philosophy is to split the difference between do-as-I-want programming which is what I do at the repl and do-as-I-say programming which matches system programming much closer.  "tech.io" is DWIW, but it is built on an set of protocols to enable very precise DWIS programming where surprises are minimal.
+
+### Do What I want:
+```clojure
+(io/get-nippy "s3://blah/blah.nippy")
+
+(io/copy "s3://blah/blah.nippy" "file://blah.nippy") 
+
+(io/put-image! "s3://blah/blah.jpg")
+
+```
+This layer has a global variable you can use to override the way the system maps from url->io-provider.    Using this variable you can setup global caching so that anything downloaded or read will get cached.  Regardless of where it came from (http, https, file, s3).  You can also setup redirection where a directory looks like s3 for unit tests that read/write to s3 urls.  
+
+### Do What I Say
+
 The intention is to provide a simple and minimal base io abstraction and then add capabilities via chaining
 and layering abstractions.
 
@@ -16,8 +31,6 @@ of this abstraction in [base.clj](src/tech/io/base.clj).  An [aws s3](src/tech/i
 Given this abstraction we can implement a [caching](src/tech/io/cache.clj) layer which will cache anything to a defined point
 in the filesystem.  We can also implement a [redirection](src/tech/io/redirect.clj) layer which will redirect requests to a
 defined point on the filesystem.
-
-A minimal [layer](src/tech/io.clj) is provided for clojure.java.io interoperability and for ease of initial use.
 
 ## Examples
 
