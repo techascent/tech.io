@@ -9,7 +9,7 @@ Simple IO library to enable rapid development on at least files, http/https, s3 
 
 The philosophy is to split the difference between do-as-I-want programming which is what I do at the repl and do-as-I-say programming which matches system programming much closer.  "tech.io" is DWIW, but it is built on an set of protocols to enable very precise DWIS programming where surprises are minimal.
 
-### Do What I want:
+### Do What I Want:
 ```clojure
 (io/get-nippy "s3://blah/blah.nippy")
 
