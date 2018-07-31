@@ -47,10 +47,14 @@ of the type:
                    (async/alt!!
                      timeout-chan :timeout
                      result-chan ([value] value))))]
-    (if (and result
-             (not= result :timeout))
+    (cond
+      (and result
+           (not= result :timeout))
       result
-      (throw (ex-info "Error requesting credentials" {})))))
+      (= result :timeout)
+      (throw (ex-info "Timeout request credentials" {:request-timeout-ms request-timeout-ms}))
+      :else
+      (throw (ex-info "Nil result requesting credentials" {})))))
 
 
 (defn credential-thread
@@ -145,7 +149,7 @@ of the type:
                    re-request-time-ms
                    src-provider]
             :or {cred-propagation-ms 50
-                 cred-request-timeout-ms 2000
+                 cred-request-timeout-ms 10000
                  ;;Save credentials for 20 minutes
                  re-request-time-ms (* 20 60 1000)
                  src-provider (cache/forwarding-provider :url-parts->provider io-prot/url-parts->provider)}}]
@@ -159,10 +163,10 @@ of the type:
     (if-let [data (get
                      ((resolve 'tech.vault-clj.core/read-credentials) vault-path)
                      "data")]
-      (merge {:tech.io.s3/access-key (get data "access_key")
-              :tech.io.s3/secret-key (get data "secret_key")}
+      (merge {:tech.aws/access-key (get data "access_key")
+              :tech.aws/secret-key (get data "secret_key")}
              (when-let [token (get data "security_token")]
-               {:tech.io.s3/session-token token}))
+               {:tech.aws/session-token token}))
       (throw (ex-info "Vault access error" vault-data)))))
 
 

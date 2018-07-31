@@ -32,10 +32,10 @@
 
 
 (defn- call-s3-fn
-  [s3-fn arg-map {:keys [::access-key
-                         ::secret-key
-                         ::session-token
-                         ::endpoint]
+  [s3-fn arg-map {:keys [:tech.aws/access-key
+                         :tech.aws/secret-key
+                         :tech.aws/session-token
+                         :tech.aws/endpoint]
                   :as options}]
   (let [cred-map (cond-> {}
                    (and access-key secret-key)
