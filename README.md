@@ -15,7 +15,7 @@ The philosophy is to split the difference between do-as-I-want programming which
 
 (io/copy "s3://blah/blah.nippy" "file://blah.nippy") 
 
-(io/put-image! "s3://blah/blah.jpg")
+(io/put-image! buffered-image "s3://blah/blah.jpg")
 
 ```
 This layer has a global variable you can use to override the way the system maps from url->io-provider.    Using this variable you can setup global caching so that anything downloaded or read will get cached.  Regardless of where it came from (http, https, file, s3).  You can also setup redirection where a directory looks like s3 for unit tests that read/write to s3 urls.  
