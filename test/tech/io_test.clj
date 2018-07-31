@@ -7,7 +7,6 @@
             [me.raynes.fs :as fs]
             [tech.io.url :as url]
             [tech.io.protocols :as io-prot]
-            [tech.config.core :as config]
             [clojure.test :refer :all]
             [tech.io.providers :as providers])
   (:import [java.io File]))
@@ -69,20 +68,18 @@
 
 
 (deftest s3-ls
-  (config/with-config [:tech-io-cache-local true
-                       :tech-io-vault-auth true]
-    (io/enable-s3!)
-    (temp-file/with-temp-dir
-      temp-dir
-      (io/with-provider (->> [(providers/vault-auth-provider nil {})
-                              (providers/caching-provider temp-dir {})]
-                             (reduce providers/wrap-provider))
-        (let [result (io/ls "s3://techascent.test/")
-              first-file (->> result
-                              (remove :directory?)
-                              first
-                              :url
-                              io/get-object)]
-          ;;Caching should always return a file.
-          (is (instance? File first-file))
-          (is (> (count result) 0)))))))
+  (io/enable-s3!)
+  (temp-file/with-temp-dir
+    temp-dir
+    (io/with-provider (->> [(providers/vault-auth-provider nil {})
+                            (providers/caching-provider temp-dir {})]
+                           providers/provider-seq->wrapped-providers)
+      (let [result (io/ls "s3://techascent.test/")
+            first-file (->> result
+                            (remove :directory?)
+                            first
+                            :url
+                            io/get-object)]
+        ;;Caching should always return a file.
+        (is (instance? File first-file))
+        (is (> (count result) 0))))))

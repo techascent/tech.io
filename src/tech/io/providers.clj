@@ -56,10 +56,21 @@
 (defn wrap-provider
   "Works like middlewear.  But the providers have to implement it themselves; most
 general purpose (cache, redirect, auth) implement it via their src-provider member."
-  ([prov-outer prov-inner]
+  ([prov-inner prov-outer]
    (assoc prov-outer
           :src-provider prov-inner))
   ([] nil))
+
+
+(defn provider-seq->wrapped-providers
+  "Given a sequence of providers, wrap them such that the first
+provider is the outer provider.  This means that data will travel
+through the sequence in a left-to-right or top-to-bottom order.
+Returns the outer provider or nil of seq is empty"
+  [provider-seq]
+  (->> provider-seq
+       reverse
+       (reduce wrap-provider)))
 
 
 (def default-provider
@@ -72,4 +83,4 @@ general purpose (cache, redirect, auth) implement it via their src-provider memb
                  (when (config/get-config config-key)
                    (provider-fn))))
           (remove nil?)
-          (reduce wrap-provider)))))
+          provider-seq->wrapped-providers))))
