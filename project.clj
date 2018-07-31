@@ -24,5 +24,4 @@
                  [techascent/tech.config "0.3.5"]
                  [org.clojure/core.async "0.3.465"]
                  [com.stuartsierra/component "0.3.2"]]
-
   :profiles {:dev {:dependencies [[techascent/vault-clj "0.2.17"]]}})

@@ -50,7 +50,7 @@ of the type:
     (if (and result
              (not= result :timeout))
       result
-      (throw (ex-info "Result channel was closed" {})))))
+      (throw (ex-info "Error requesting credentials" {})))))
 
 
 (defn credential-thread
@@ -76,8 +76,8 @@ of the type:
                             (if-not error
                               (async/>!! result-chan credentials)
                               (do
-                                (log/error error)
-                                (log/warn "Error retrieving credentials")
+                                (log/warn (format "Error retrieving credentials: %s"
+                                                  (with-out-str (println error))))
                                 ;;Chill for a second to make sure we aren't spinning
                                 (Thread/sleep 50)))
                             (recur credentials (async/<!! control-chan)))
@@ -122,16 +122,19 @@ of the type:
 
   c/Lifecycle
   (start [this]
-    (if (:shutdown-fn this)
-      this
-      (let [{:keys [shutdown-fn request-chan]} (credential-thread re-request-time-ms src-cred-fn)]
+    (if-not (:shutdown-fn this)
+      (let [{:keys [shutdown-fn request-chan]}
+            (credential-thread re-request-time-ms src-cred-fn)]
         (assoc this
-               :request-credentials-fn #(request-credentials cred-request-timeout-ms request-chan)
-               :shutdown-fn shutdown-fn))))
+               :request-credentials-fn #(request-credentials cred-request-timeout-ms
+                                                             request-chan)
+               :shutdown-fn shutdown-fn))
+      this))
 
   (stop [this]
-    ((:shutdown-fn this))
-    (dissoc this :request-credentials-fn :shutdown-fn)))
+    (if-let [shutdown-fn (:shutdown-fn this)]
+      (shutdown-fn)
+      (dissoc this :request-credentials-fn :shutdown-fn))))
 
 
 
@@ -152,18 +155,18 @@ of the type:
 
 (defn get-vault-aws-creds
   [vault-path]
-  (when-let [data (get
-                   ((resolve 'tech.vault-clj.core/read-credentials) vault-path)
-                   "data")]
-    (merge {:tech.io.s3/access-key (get data "access_key")
-            :tech.io.s3/secret-key (get data "secret_key")}
-           (when-let [token (get data "security_token")]
-             {:tech.io.s3/session-token token}))))
+  (let [vault-data ((resolve 'tech.vault-clj.core/read-credentials) vault-path)]
+    (if-let [data (get
+                     ((resolve 'tech.vault-clj.core/read-credentials) vault-path)
+                     "data")]
+      (merge {:tech.io.s3/access-key (get data "access_key")
+              :tech.io.s3/secret-key (get data "secret_key")}
+             (when-let [token (get data "security_token")]
+               {:tech.io.s3/session-token token}))
+      (throw (ex-info "Vault access error" vault-data)))))
 
 
 (defn vault-aws-auth-provider
-  [{:keys [vault-path]
-    :or {vault-path "aws/sts/core"}
-    :as options}]
+  [vault-path options]
   (require 'tech.vault-clj.core)
   (auth-provider #(get-vault-aws-creds vault-path) options))
