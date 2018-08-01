@@ -14,31 +14,6 @@ of the type:
             [tech.io.url :as url]))
 
 
-(defn with-credential-update
-  "Attempt an s3 operation.  If the operation fails with an invalid
-  access key, request new aws credentials from vault exactly once.
-  Continue attempting operation until it either fails with a different
-  exception, hits the timeout, or succeeds"
-  [timeout-ms cred-request-fn execute-fn]
-  (let [start-time (System/currentTimeMillis)]
-     (loop [current-time (System/currentTimeMillis)
-            credentials (cred-request-fn)]
-       (let [{:keys [retval error]}
-             (try
-               {:retval (execute-fn credentials)}
-               (catch Throwable e
-                 {:error e}))]
-         (if (and error
-                  (= :request-credentials
-                     (:exception-action (ex-data error)))
-                  (< (- current-time start-time) timeout-ms))
-           (recur (System/currentTimeMillis) (cred-request-fn))
-           (if error
-             (throw error)
-             retval))))))
-
-
-
 (defn request-credentials
   [request-timeout-ms thread-chan]
   (let [result-chan (async/chan)
@@ -91,54 +66,57 @@ of the type:
      :request-chan control-chan}))
 
 
+(defn start-auth-provider
+  [provider]
+  (if-not (:shutdown-fn provider)
+    (let [{:keys [shutdown-fn request-chan]}
+          (credential-thread (:re-request-time-ms provider)
+                             (:src-cred-fn provider))]
+      (assoc provider
+             :request-credentials-fn #(request-credentials (:cred-request-timeout-ms provider)
+                                                           request-chan)
+             :shutdown-fn shutdown-fn))
+    provider))
+
+
+(defn stop-auth-provider
+  [provider]
+  (when-let [shutdown-fn (:shutdown-fn provider)]
+    (shutdown-fn))
+  (dissoc provider :request-credentials-fn :shutdown-fn))
+
+
 (defrecord AuthProvider [propagation-ms cred-request-timeout-ms re-request-time-ms
                          request-credentials-fn
                          src-cred-fn
                          src-provider]
   io-prot/IOProvider
   (input-stream [provider url-parts options]
-    (with-credential-update cred-request-timeout-ms request-credentials-fn
-      #(io-prot/input-stream src-provider url-parts (merge % options))))
+    (io-prot/input-stream src-provider url-parts (merge (request-credentials-fn) options)))
   (output-stream! [provider url-parts options]
-    (with-credential-update cred-request-timeout-ms request-credentials-fn
-      #(io-prot/output-stream! src-provider url-parts (merge % options))))
+    (io-prot/output-stream! src-provider url-parts (merge (request-credentials-fn) options)))
   (exists? [provider url-parts options]
-    (with-credential-update cred-request-timeout-ms request-credentials-fn
-      #(io-prot/exists? src-provider url-parts (merge % options))))
+    (io-prot/exists? src-provider url-parts (merge (request-credentials-fn) options)))
   (ls [provider url-parts options]
-    (with-credential-update cred-request-timeout-ms request-credentials-fn
-      #(io-prot/ls src-provider url-parts (merge % options))))
+    (io-prot/ls src-provider url-parts (merge (request-credentials-fn) options)))
   (delete! [provider url-parts options]
-    (with-credential-update cred-request-timeout-ms request-credentials-fn
-      #(io-prot/delete! src-provider url-parts (merge % options))))
+    (io-prot/delete! src-provider url-parts (merge (request-credentials-fn) options)))
   (metadata [provider url-parts options]
-    (with-credential-update cred-request-timeout-ms request-credentials-fn
-      #(io-prot/metadata src-provider url-parts (merge % options))))
+    (io-prot/metadata src-provider url-parts (merge (request-credentials-fn) options)))
 
   io-prot/ICopyObject
   (get-object [provider url-parts options]
-    (with-credential-update cred-request-timeout-ms request-credentials-fn
-      #(io-prot/get-object src-provider url-parts (merge % options))))
+    (io-prot/get-object src-provider url-parts (merge (request-credentials-fn) options)))
   (put-object! [provider url-parts value options]
-    (with-credential-update cred-request-timeout-ms request-credentials-fn
-      #(io-prot/put-object! src-provider url-parts value (merge % options))))
+    (io-prot/put-object! src-provider url-parts value (merge (request-credentials-fn) options)))
 
 
   c/Lifecycle
   (start [this]
-    (if-not (:shutdown-fn this)
-      (let [{:keys [shutdown-fn request-chan]}
-            (credential-thread re-request-time-ms src-cred-fn)]
-        (assoc this
-               :request-credentials-fn #(request-credentials cred-request-timeout-ms
-                                                             request-chan)
-               :shutdown-fn shutdown-fn))
-      this))
+    (start-auth-provider this))
 
   (stop [this]
-    (if-let [shutdown-fn (:shutdown-fn this)]
-      (shutdown-fn)
-      (dissoc this :request-credentials-fn :shutdown-fn))))
+    (stop-auth-provider this)))
 
 
 
