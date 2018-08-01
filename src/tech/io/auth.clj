@@ -86,7 +86,8 @@ of the type:
   (dissoc provider :request-credentials-fn :shutdown-fn))
 
 
-(defrecord AuthProvider [propagation-ms cred-request-timeout-ms re-request-time-ms
+(defrecord AuthProvider [cred-request-timeout-ms
+                         re-request-time-ms
                          request-credentials-fn
                          src-cred-fn
                          src-provider]
@@ -119,19 +120,16 @@ of the type:
     (stop-auth-provider this)))
 
 
-
 (defn auth-provider
   "You need to call com.stuartsierra.component/start on this to enable the credential request system."
-  [cred-fn {:keys [cred-propagation-ms
-                   cred-request-timeout-ms
-                   re-request-time-ms
+  [cred-fn {:keys [cred-request-timeout-ms ;;How long credentials last
+                   re-request-time-ms ;;How long to wait for a credential request before signalling error.
                    src-provider]
-            :or {cred-propagation-ms 50
-                 cred-request-timeout-ms 10000
+            :or {cred-request-timeout-ms 10000
                  ;;Save credentials for 20 minutes
                  re-request-time-ms (* 20 60 1000)
                  src-provider (cache/forwarding-provider :url-parts->provider io-prot/url-parts->provider)}}]
-  (->AuthProvider cred-propagation-ms cred-request-timeout-ms re-request-time-ms
+  (->AuthProvider cred-request-timeout-ms re-request-time-ms
                   nil cred-fn src-provider))
 
 
@@ -141,9 +139,12 @@ of the type:
     (if-let [data (get
                      ((resolve 'tech.vault-clj.core/read-credentials) vault-path)
                      "data")]
-      (merge {:tech.aws/access-key (get data "access_key")
-              :tech.aws/secret-key (get data "secret_key")}
-             (when-let [token (get data "security_token")]
+      (merge {:tech.aws/access-key (or (get data "access_key")
+                                       (get data "AWS_ACCESS_KEY_ID"))
+              :tech.aws/secret-key (or (get data "secret_key")
+                                       (get data "AWS_SECRET_ACCESS_KEY"))}
+             (when-let [token (or (get data "security_token")
+                                  (get data "AWS_SESSION_TOKEN"))]
                {:tech.aws/session-token token}))
       (throw (ex-info "Vault access error" vault-data)))))
 
