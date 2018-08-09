@@ -291,11 +291,6 @@ is accessible via the browser using a normal https request."
   (->S3Provider default-options))
 
 
-(defmethod io-prot/url-parts->provider :s3
-  [& args]
-  (->S3Provider {}))
-
-
 (defn s3-bucket-key->url
   [bucket key]
   (str "s3://" bucket "/" key))

@@ -2,5 +2,6 @@
  :tech-io-redirect-dir "tech-io/redirect"
  :tech-io-cache-local false
  :tech-io-redirect-local false
- :tech-io-vault-cred-path "aws/sts/core"
- :tech-io-vault-auth false}
+ :tech-vault-aws-path "aws/sts/core"
+ :tech-io-vault-auth false
+ :tech-aws-endpoint "us-west-2"}

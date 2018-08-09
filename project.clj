@@ -1,4 +1,4 @@
-(defproject techascent/tech.io "0.1.15"
+(defproject techascent/tech.io "0.1.16"
   :description "IO abstractions to enable rapid research and prototyping."
   :url "http://github.com/tech-ascent/tech.io"
   :license {:name "Eclipse Public License"
@@ -24,5 +24,12 @@
                  [techascent/tech.config "0.3.5"]
                  [org.clojure/core.async "0.3.465"]
                  [com.stuartsierra/component "0.3.2"]]
-  :profiles {:dev {:dependencies [[techascent/vault-clj "0.2.17"]]}
-             :test {:dependencies [[techascent/vault-clj "0.2.17"]]}})
+
+  :plugins [[lein-environ "1.1.0"]]
+
+  :profiles {:dev {:dependencies [[techascent/vault-clj "0.2.17"]]
+                   :env {:tech-io-vault-auth "true"
+                         :tech-io-vault-aws-path "aws/sts/core"}}
+             :test {:dependencies [[techascent/vault-clj "0.2.17"]]
+                    :env {:tech-io-vault-auth "true"
+                          :tech-io-vault-aws-path "aws/sts/core"}}})

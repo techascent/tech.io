@@ -1,6 +1,8 @@
 (ns tech.io.providers
   (:require [tech.config.core :as config]
-            [com.stuartsierra.component :as c]))
+            [com.stuartsierra.component :as c]
+            [tech.io.protocols :as io-prot]
+            [tech.io.base :as base]))
 
 
 (defn caching-provider
@@ -36,7 +38,7 @@
                           providers
                           (assoc providers map-key
                                  ((resolve 'tech.io.auth/vault-aws-auth-provider)
-                                  (or vault-path (config/get-config :tech-io-vault-cred-path))
+                                  (or vault-path (config/get-config :tech-vault-aws-path))
                                   options)))
         ;;start is idempotent
         (swap! *default-vault-auth-providers* update map-key c/start)
@@ -84,3 +86,21 @@ Returns the outer provider or nil of seq is empty"
                    (provider-fn))))
           (remove nil?)
           provider-seq->wrapped-providers))))
+
+
+(defmethod io-prot/url-parts->provider :s3
+  [& args]
+  (require 'tech.io.s3)
+  ((resolve 'tech.io.s3/s3-provider) (if-not (empty? (config/get-config :tech-aws-endpoint))
+                                       {:tech.aws/endpoint (config/get-config :tech-aws-endpoint)}
+                                       {})))
+
+
+(defmethod io-prot/url-parts->provider :default
+  [& args]
+  (Object.))
+
+
+(defmethod io-prot/url-parts->provider :file
+  [url-parts]
+  (base/parts->file url-parts))
