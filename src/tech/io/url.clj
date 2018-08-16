@@ -59,6 +59,12 @@
   (string-seq->file-path path))
 
 
+(defn url->file-path
+  [url]
+  (-> (url->parts url)
+      parts->file-path))
+
+
 (defn extension
   ^String [^String str-url]
   (.substring str-url (+ 1 (.lastIndexOf str-url "."))))
