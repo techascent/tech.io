@@ -154,7 +154,7 @@ The most optimizations will apply to either files or byte arrays."
   "Put nippy data to a url"
   [url data & options]
   (lookup-provider url
-    (edn/put-nippy! provider url-parts (args->map options))))
+    (edn/put-nippy! provider url-parts data (args->map options))))
 
 
 (defn get-nippy
