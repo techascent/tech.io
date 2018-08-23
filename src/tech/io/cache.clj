@@ -46,11 +46,15 @@
 
 (defn- maybe-cache-stream
   [url-parts options cache-parts cache-options cache-provider src-provider]
-  (let [missing? (not (io-prot/exists? cache-provider cache-parts options))]
+  (let [missing? (not (io-prot/exists? cache-provider cache-parts options))
+        src-modify (:modify-date (io-prot/metadata src-provider url-parts options))]
     (when (or missing?
               (if (::cache-check-metadata-on-read? cache-options)
-                (date-before? (:modify-date (io-prot/metadata cache-provider cache-parts cache-options))
-                              (:modify-date (io-prot/metadata src-provider url-parts options)))
+                ;;If we can't get a modification date from the src provider then we should only
+                ;;get the object if it is missing.
+                (and src-modify
+                     (date-before? (:modify-date (io-prot/metadata cache-provider cache-parts cache-options))
+                                   src-modify))
                 true))
       (io-prot/put-object! cache-provider cache-parts
                            (io-prot/get-object src-provider url-parts options)
