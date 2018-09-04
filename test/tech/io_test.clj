@@ -67,19 +67,19 @@
                  (slurp (io/input-stream (str temp-dir "/" "file" "/" "project-3.clj"))))))))))
 
 
-(deftest s3-ls
-  (io/enable-s3!)
-  (temp-file/with-temp-dir
-    temp-dir
-    (io/with-provider (->> [(providers/vault-auth-provider nil {})
-                            (providers/caching-provider temp-dir {})]
-                           providers/provider-seq->wrapped-providers)
-      (let [result (io/ls "s3://techascent.test/")
-            first-file (->> result
-                            (remove :directory?)
-                            first
-                            :url
-                            io/get-object)]
-        ;;Caching should always return a file.
-        (is (instance? File first-file))
-        (is (> (count result) 0))))))
+;; (deftest s3-ls
+;;   (io/enable-s3!)
+;;   (temp-file/with-temp-dir
+;;     temp-dir
+;;     (io/with-provider (->> [(providers/vault-auth-provider nil {})
+;;                             (providers/caching-provider temp-dir {})]
+;;                            providers/provider-seq->wrapped-providers)
+;;       (let [result (io/ls "s3://techascent.test/")
+;;             first-file (->> result
+;;                             (remove :directory?)
+;;                             first
+;;                             :url
+;;                             io/get-object)]
+;;         ;;Caching should always return a file.
+;;         (is (instance? File first-file))
+;;         (is (> (count result) 0))))))

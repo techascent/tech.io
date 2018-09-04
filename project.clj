@@ -27,9 +27,10 @@
 
   :plugins [[lein-environ "1.1.0"]]
 
-  :profiles {:dev {:dependencies [[techascent/vault-clj "0.2.17"]]
-                   :env {:tech-io-vault-auth "true"
-                         :tech-io-vault-aws-path "aws/sts/core"}}
-             :test {:dependencies [[techascent/vault-clj "0.2.17"]]
-                    :env {:tech-io-vault-auth "true"
-                          :tech-io-vault-aws-path "aws/sts/core"}}})
+  ;; :profiles {:dev {:dependencies [[techascent/vault-clj "0.2.17"]]
+  ;;                  :env {:tech-io-vault-auth "true"
+  ;;                        :tech-io-vault-aws-path "aws/sts/core"}}
+  ;;            :test {:dependencies [[techascent/vault-clj "0.2.17"]]
+  ;;                   :env {:tech-io-vault-auth "true"
+  ;;                         :tech-io-vault-aws-path "aws/sts/core"}}}
+  )

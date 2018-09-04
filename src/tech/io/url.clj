@@ -4,17 +4,29 @@
            [java.io File]))
 
 
+(defn parse-url-arguments
+  [args]
+  (->> (s/split args #"&")
+       (mapv (fn [arg-str]
+               (let [eq-sign (.indexOf arg-str "=")]
+                 (if (>= eq-sign 0)
+                   [(.substring arg-str 0 eq-sign)
+                    (.substring arg-str (+ eq-sign 1))]
+                                arg-str))))))
+
+
 (defn url->parts
   [url]
   (let [url (str url)
-        [url args] (let [first-octothorpe (.indexOf url "#")]
-                     (if (>= first-octothorpe 0)
-                       [(.substring url 0 first-octothorpe)
-                        (.substring url (+ first-octothorpe 1))]
+        [url args] (let [arg-delimiter (.indexOf url "?")]
+                     (if (>= arg-delimiter 0)
+                       [(.substring url 0 arg-delimiter)
+                        (.substring url (+ arg-delimiter 1))]
                        [url nil]))
         parts (s/split url #"/")
         ^String protocol-part (first parts)
-        path (drop 2 parts)]
+        path (drop 2 parts)
+        args (when args (parse-url-arguments args))]
     {:protocol (keyword (.substring protocol-part 0 (- (count protocol-part) 1)))
      :path path
      :arguments args}))
@@ -31,8 +43,14 @@
   (if arguments
     (str (name protocol) "://"
          (join-forward-slash path)
-         "#"
-         arguments)
+         "?"
+         (s/join
+          "&"
+          (->> arguments
+               (map (fn [arg]
+                      (if (= 2 (count arg))
+                        (str (first arg) "=" (second arg))
+                        arg))))))
     (str (name protocol) "://"
          (join-forward-slash path))))
 
