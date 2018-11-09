@@ -3,7 +3,7 @@
             [tech.io.cache :as cache]
             [tech.io.redirect :as redirect]
             [tech.io.temp-file :as temp-file]
-            [think.resource.core :as resource]
+            [tech.resource :as resource]
             [me.raynes.fs :as fs]
             [tech.io.url :as url]
             [tech.io.protocols :as io-prot]

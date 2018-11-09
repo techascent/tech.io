@@ -1,5 +1,5 @@
 (ns tech.io.temp-file
-  (:require [think.resource.core :as resource]
+  (:require [tech.resource :as resource]
             [clojure.java.io :as io]
             [me.raynes.fs :as fs]
             [clojure.string :as s]

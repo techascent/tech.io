@@ -7,7 +7,7 @@ of clojure.java.io."
             [tech.io.edn :as edn]
             [tech.io.base]
             [tech.io.temp-file :as temp-file]
-            [think.resource.core :as resource]
+            [tech.resource :as resource]
             [tech.io.providers :as providers])
   (:import [javax.imageio ImageIO]))
 
