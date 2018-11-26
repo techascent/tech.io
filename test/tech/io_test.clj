@@ -14,7 +14,7 @@
 
 (deftest file-cache-test
   (let [temp-dir
-        (resource/with-resource-context
+        (resource/stack-resource-context
           (temp-file/with-temp-dir
             temp-dir
             (let [fcache (cache/create-file-cache temp-dir {})]
@@ -34,7 +34,7 @@
 
 
 (deftest get-put-object-cache-test
-  (resource/with-resource-context
+  (resource/stack-resource-context
     (temp-file/with-temp-dir
       temp-dir
       (let [fcache (cache/create-file-cache temp-dir {})]
@@ -55,7 +55,7 @@
 
 (deftest file-redirect-test
   (let [proj-file (slurp (io/input-stream (io/get-object "file://project.clj")))]
-    (resource/with-resource-context
+    (resource/stack-resource-context
       (temp-file/with-temp-dir
         temp-dir
         (io/with-provider (redirect/create-file-provider temp-dir {})

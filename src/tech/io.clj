@@ -174,7 +174,7 @@ The most optimizations will apply to either files or byte arrays."
 
 (defn get-image
   [path-or-url]
-  (resource/with-resource-context
+  (resource/stack-resource-context
     (let [temp (temp-file/watch-file-for-delete
                 (temp-file/random-file-url))]
       (copy path-or-url temp)

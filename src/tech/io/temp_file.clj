@@ -1,5 +1,6 @@
 (ns tech.io.temp-file
   (:require [tech.resource :as resource]
+            [tech.resource.stack :as stack]
             [clojure.java.io :as io]
             [me.raynes.fs :as fs]
             [clojure.string :as s]
@@ -24,7 +25,7 @@
 
 
 (defrecord ResourceFile [path-or-file]
-  resource/PResource
+  stack/PResource
   (release-resource [this]
     (let [path-or-file
           (if (url/url? path-or-file)
@@ -58,7 +59,7 @@
   "Execute code with a variable bound to the name of a temp directory
 that will be removed when the code completes (or throws an exception)."
   [dirname-var & body]
-  `(resource/with-resource-context
+  `(resource/stack-resource-context
      (let [~dirname-var (random-temp-dir)]
        ~@body)))
 
