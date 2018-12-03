@@ -26,7 +26,7 @@ The intention is to provide a simple and minimal base io abstraction and then ad
 and layering abstractions.
 
 The base abstraction is the [IOProvider](src/tech/io/protocols.clj).  There are basic implementations
-of this abstraction in [base.clj](src/tech/io/base.clj).  An [aws s3](src/tech/io/s3.clj) layer is also provided.
+of this abstraction in [base.clj](src/tech/io/base.clj)
 
 Given this abstraction we can implement a [caching](src/tech/io/cache.clj) layer which will cache anything to a defined point
 in the filesystem.  We can also implement a [redirection](src/tech/io/redirect.clj) layer which will redirect requests to a
