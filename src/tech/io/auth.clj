@@ -137,8 +137,8 @@ of the type:
   [vault-path]
   (let [vault-data ((resolve 'tech.vault-clj.core/read-credentials) vault-path)]
     (if-let [data (get
-                     ((resolve 'tech.vault-clj.core/read-credentials) vault-path)
-                     "data")]
+                   ((resolve 'tech.vault-clj.core/read-credentials) vault-path)
+                   "data")]
       (merge {:tech.aws/access-key (or (get data "access_key")
                                        (get data "AWS_ACCESS_KEY_ID"))
               :tech.aws/secret-key (or (get data "secret_key")
@@ -152,4 +152,4 @@ of the type:
 (defn vault-aws-auth-provider
   [vault-path options]
   (require 'tech.vault-clj.core)
-  (auth-provider #(get-vault-aws-creds vault-path) options))
+  (auth-provider #(get-vault-aws-creds vault-path options) options))

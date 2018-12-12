@@ -1,12 +1,13 @@
 (ns tech.io.url
-  (:require [clojure.string :as s])
+  (:require [clojure.string :as string]
+            [clojure.spec.alpha :as s])
   (:import [java.net URL]
            [java.io File]))
 
 
 (defn parse-url-arguments
   [args]
-  (->> (s/split args #"&")
+  (->> (string/split args #"&")
        (mapv (fn [arg-str]
                (let [eq-sign (.indexOf arg-str "=")]
                  (if (>= eq-sign 0)
@@ -16,6 +17,10 @@
 
 
 (defn url->parts
+  "It is not a great idea to add custom java url protocls as it involves creating
+  a new stream handler and that is a one-off (per-program) operation thus you would
+  potentially conflict with anyone else who did such a thing:
+  https://stackoverflow.com/questions/26363573/registering-and-using-a-custom-java-net-url-protocol"
   [url]
   (let [url (str url)
         [url args] (let [arg-delimiter (.indexOf url "?")]
@@ -23,9 +28,13 @@
                        [(.substring url 0 arg-delimiter)
                         (.substring url (+ arg-delimiter 1))]
                        [url nil]))
-        parts (s/split url #"/")
+        parts (string/split url #"/")
         ^String protocol-part (first parts)
-        path (drop 2 parts)
+        parts (rest parts)
+        path (if (= 0 (count (first parts)))
+                (rest parts)
+                (throw (ex-info (format "Unrecognized url: %s" url)
+                                {:url url})))
         args (when args (parse-url-arguments args))]
     {:protocol (keyword (.substring protocol-part 0 (- (count protocol-part) 1)))
      :path path
@@ -34,7 +43,7 @@
 
 (defn- join-forward-slash
   ^String [path]
-  (s/join "/" path))
+  (string/join "/" path))
 
 
 (defn parts->url
@@ -44,7 +53,7 @@
     (str (name protocol) "://"
          (join-forward-slash path)
          "?"
-         (s/join
+         (string/join
           "&"
           (->> arguments
                (map (fn [arg]
@@ -67,7 +76,7 @@
 
 (defn string-seq->file-path
   [str-seq]
-  (s/join File/separator str-seq))
+  (string/join File/separator str-seq))
 
 
 (defn parts->file-path
