@@ -134,7 +134,7 @@ of the type:
 
 
 (defn get-vault-aws-creds
-  [vault-path]
+  [vault-path options]
   (let [vault-data ((resolve 'tech.vault-clj.core/read-credentials) vault-path)]
     (if-let [data (get
                    ((resolve 'tech.vault-clj.core/read-credentials) vault-path)
