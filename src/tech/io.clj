@@ -9,7 +9,13 @@ of clojure.java.io."
             [tech.io.temp-file :as temp-file]
             [tech.resource :as resource]
             [tech.io.providers :as providers])
-  (:import [javax.imageio ImageIO]))
+  (:import [javax.imageio ImageIO]
+           [java.io InputStream OutputStream File]
+           [java.awt.image BufferedImage]))
+
+
+(set! *warn-on-reflection* true)
+
 
 (defn enable-s3!
   []
@@ -63,7 +69,7 @@ of clojure.java.io."
 
 (defn input-stream
   "thing->input-stream conversion.  Falls back to clojure.java.io if url is not a string url"
-  [url & options]
+  ^InputStream [url & options]
   (if (url/url? url)
     (lookup-provider url
       (io-prot/input-stream provider url-parts (args->map options)))
@@ -72,7 +78,7 @@ of clojure.java.io."
 
 (defn output-stream!
   "thing->output-stream conversion.  Falls back to clojure.java.io if url is not a string url"
-  [url & options]
+  ^OutputStream [url & options]
   (if (url/url? url)
     (lookup-provider url
       (io-prot/output-stream! provider url-parts (args->map options)))
@@ -81,8 +87,8 @@ of clojure.java.io."
 
 (defn copy
   [src dest & args]
-  (with-open [in-s (apply input-stream src args)
-              out-s (apply output-stream! dest args)]
+  (with-open [^InputStream in-s (apply input-stream src args)
+              ^OutputStream out-s (apply output-stream! dest args)]
     (io/copy in-s out-s)))
 
 
@@ -169,7 +175,7 @@ The most optimizations will apply to either files or byte arrays."
   [image path-or-url & {:as options}]
   (let [path-ext (url/extension path-or-url)]
     (with-open [out-s (output-stream! path-or-url)]
-      (ImageIO/write image path-ext out-s))))
+      (ImageIO/write ^BufferedImage image path-ext out-s))))
 
 
 (defn get-image
@@ -178,7 +184,7 @@ The most optimizations will apply to either files or byte arrays."
     (let [temp (temp-file/watch-file-for-delete
                 (temp-file/random-file-url))]
       (copy path-or-url temp)
-      (ImageIO/read (file temp)))))
+      (ImageIO/read ^File (file temp)))))
 
 
 (def ^:dynamic *enable-poor-api-naming?* true)

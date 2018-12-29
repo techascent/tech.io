@@ -1,22 +1,20 @@
 (ns tech.io.providers
   (:require [tech.config.core :as config]
-            [com.stuartsierra.component :as c]
             [tech.io.protocols :as io-prot]
-            [tech.io.base :as base]))
+            [tech.io.base :as base]
+            [tech.parallel :as parallel]))
 
 
 (defn caching-provider
   [cache-dir options]
-  (require 'tech.io.cache)
-  ((resolve 'tech.io.cache/create-file-cache)
+  ((parallel/require-resolve 'tech.io.cache/create-file-cache)
    (or cache-dir (config/get-config :tech-io-cache-dir))
    options))
 
 
 (defn redirect-provider
   [redirect-dir options]
-  (require 'tech.io.redirect)
-  ((resolve 'tech.io.redirect/create-file-provider)
+  ((parallel/require-resolve 'tech.io.redirect/create-file-provider)
    (or redirect-dir (config/get-config :tech-io-redirect-dir))
    options))
 
@@ -27,32 +25,9 @@
 
 (defn vault-auth-provider
   [vault-path options]
-  (require 'tech.io.auth)
-  (let [map-key [vault-path options]
-        providers @*default-vault-auth-providers*]
-    (if-let [provider (get providers map-key)]
-      provider
-      (do
-        ;;only allow this once, nil->provider only valid transition
-        (compare-and-set! *default-vault-auth-providers*
-                          providers
-                          (assoc providers map-key
-                                 ((resolve 'tech.io.auth/vault-aws-auth-provider)
-                                  (or vault-path (config/get-config :tech-vault-aws-path))
-                                  options)))
-        ;;start is idempotent
-        (swap! *default-vault-auth-providers* update map-key c/start)
-        (recur vault-path options)))))
-
-
-(defn shutdown-providers!
-  []
-  (let [providers @*default-vault-auth-providers*]
-    (compare-and-set! *default-vault-auth-providers* providers {})
-    (->> providers
-         (map (comp c/stop second))
-         dorun)
-    :ok))
+  ((parallel/require-resolve 'tech.io.auth/vault-aws-auth-provider)
+   (or vault-path (config/get-config :tech-vault-aws-path))
+   options))
 
 
 (defn wrap-provider
@@ -86,14 +61,6 @@ Returns the outer provider or nil of seq is empty"
                    (provider-fn))))
           (remove nil?)
           provider-seq->wrapped-providers))))
-
-
-(defmethod io-prot/url-parts->provider :s3
-  [& args]
-  (require 'tech.io.s3)
-  ((resolve 'tech.io.s3/s3-provider) (if-not (empty? (config/get-config :tech-aws-endpoint))
-                                       {:tech.aws/endpoint (config/get-config :tech-aws-endpoint)}
-                                       {})))
 
 
 (defmethod io-prot/url-parts->provider :default

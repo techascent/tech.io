@@ -4,9 +4,12 @@
             [tech.io.url :as url]
             [clojure.java.io :as io]
             [me.raynes.fs :as fs])
-  (:import [java.io File]
+  (:import [java.io File InputStream OutputStream]
            [java.nio.file Files LinkOption]
            [java.util Date]))
+
+
+(set! *warn-on-reflection* true)
 
 
 (defn- io-input-stream
@@ -46,7 +49,7 @@
   (output-stream! [this url-parts options] (io-output-stream url-parts options))
   (exists? [this url-parts options]
     (try
-      (.close (io-prot/input-stream this url-parts options))
+      (.close ^InputStream (io-prot/input-stream this url-parts options))
       true
       (catch Throwable e false)))
   (ls [this url-parts options]
@@ -84,8 +87,8 @@
   (get-object [provider url-parts options]
     (io-prot/input-stream provider url-parts options))
   (put-object! [provider url-parts value options]
-    (with-open [in-s (io/input-stream value)
-                out-s (io-prot/output-stream! provider url-parts options)]
+    (with-open [^InputStream in-s (io/input-stream value)
+                ^OutputStream out-s (io-prot/output-stream! provider url-parts options)]
       (io/copy in-s out-s)))
 
   File

@@ -5,10 +5,13 @@
            [java.io File]))
 
 
+(set! *warn-on-reflection* true)
+
+
 (defn parse-url-arguments
   [args]
   (->> (string/split args #"&")
-       (mapv (fn [arg-str]
+       (mapv (fn [^String arg-str]
                (let [eq-sign (.indexOf arg-str "=")]
                  (if (>= eq-sign 0)
                    [(.substring arg-str 0 eq-sign)
