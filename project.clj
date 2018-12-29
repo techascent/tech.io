@@ -9,5 +9,5 @@
                  [com.taoensso/nippy "2.15.0-alpha1"]
                  [com.taoensso/timbre "4.10.0"]
                  [techascent/tech.config "0.3.5"]
-                 [org.clojure/core.async "0.4.474"]
-                 [com.stuartsierra/component "0.3.2"]])
+                 [techascent/tech.parallel "1.2"]]
+  :profiles {:dev {:dependencies [[techascent/vault-clj "0.2.17"]]}})
