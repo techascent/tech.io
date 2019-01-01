@@ -6,4 +6,7 @@
   :plugins [[lein-tools-deps "0.4.1"]]
   :middleware [lein-tools-deps.plugin/resolve-dependencies-with-deps-edn]
   :lein-tools-deps/config {:config-files [:install :user :project]}
-  :profiles {:dev {:lein-tools-deps/config {:resolve-aliases [:test]}}})
+  :profiles {:dev {:lein-tools-deps/config {:resolve-aliases [:test]}}}
+  :repositories {"releases"  {:url "s3p://techascent.jars/releases/"
+                              :no-auth true
+                              :sign-releases false}})
