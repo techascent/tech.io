@@ -10,7 +10,7 @@
             [taoensso.timbre :as log]
             [tech.io.cache :as cache]
             [tech.io.url :as url]
-            [tech.parallel :as parallel]))
+            [tech.parallel.require :as parallel-req]))
 
 
 (defn get-credentials
@@ -82,7 +82,7 @@
 (defn get-vault-aws-creds
   [vault-path options]
   (log/debug (format "Request vault information: %s" vault-path))
-  (let [vault-request ((parallel/require-resolve 'tech.vault-clj.core/read-credentials)
+  (let [vault-request ((parallel-req/require-resolve 'tech.vault-clj.core/read-credentials)
                        vault-path)
         data (get vault-request "data")
         vault-errors (get vault-request "errors")]

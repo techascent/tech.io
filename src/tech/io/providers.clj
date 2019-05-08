@@ -2,19 +2,19 @@
   (:require [tech.config.core :as config]
             [tech.io.protocols :as io-prot]
             [tech.io.base :as base]
-            [tech.parallel :as parallel]))
+            [tech.parallel.require :as parallel-req]))
 
 
 (defn caching-provider
   [cache-dir options]
-  ((parallel/require-resolve 'tech.io.cache/create-file-cache)
+  ((parallel-req/require-resolve 'tech.io.cache/create-file-cache)
    (or cache-dir (config/get-config :tech-io-cache-dir))
    options))
 
 
 (defn redirect-provider
   [redirect-dir options]
-  ((parallel/require-resolve 'tech.io.redirect/create-file-provider)
+  ((parallel-req/require-resolve 'tech.io.redirect/create-file-provider)
    (or redirect-dir (config/get-config :tech-io-redirect-dir))
    options))
 
@@ -25,7 +25,7 @@
 
 (defn vault-auth-provider
   [vault-path options]
-  ((parallel/require-resolve 'tech.io.auth/vault-aws-auth-provider)
+  ((parallel-req/require-resolve 'tech.io.auth/vault-aws-auth-provider)
    (or vault-path (config/get-config :tech-vault-aws-path))
    options))
 
