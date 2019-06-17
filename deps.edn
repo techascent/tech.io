@@ -5,6 +5,4 @@
         clj-commons/fs {:mvn/version "1.5.0"}
         techascent/tech.config {:mvn/version "0.3.5"}
         techascent/tech.parallel {:mvn/version "1.6"}}
- :aliases {:test {:extra-deps {techascent/vault-clj {:mvn/version "0.2.21"}}}}
- :mvn/repos {"releases" {:url "s3://techascent.jars/releases/"}}
  }
