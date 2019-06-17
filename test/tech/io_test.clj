@@ -83,3 +83,14 @@
 ;;         ;;Caching should always return a file.
 ;;         (is (instance? File first-file))
 ;;         (is (> (count result) 0))))))
+
+
+(deftest interlocked-copy-test
+  (resource/stack-resource-context
+   (temp-file/with-temp-dir
+     temp-dir
+     (let [dest-file (io/interlocked-copy-to-file
+                      "project.clj"
+                      (str temp-dir "/" "test.clj"))]
+       (is (= (slurp (io/input-stream "file://project.clj"))
+              (slurp (io/input-stream dest-file))))))))

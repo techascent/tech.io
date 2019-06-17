@@ -11,7 +11,9 @@ of clojure.java.io."
             [tech.io.providers :as providers])
   (:import [javax.imageio ImageIO]
            [java.io InputStream OutputStream File]
-           [java.awt.image BufferedImage]))
+           [java.awt.image BufferedImage]
+           [java.nio.file Files Path StandardCopyOption
+            CopyOption]))
 
 
 (set! *warn-on-reflection* true)
@@ -22,8 +24,9 @@ of clojure.java.io."
   (require 'tech.io.s3))
 
 
-;;Purists or poeple using components will want to use the io-protocols directly with providers
-;;passed in.  This API is meant to mimic clojure.java.io but in a more extensible way.
+;;Purists or poeple using components will want to use the io-protocols directly with
+;;providers passed in.  This API is meant to mimic clojure.java.io but in a more
+;;extensible way.
 (def ^:dynamic *provider-fn* #(or (providers/default-provider)
                                   (io-prot/url-parts->provider %)))
 
@@ -52,7 +55,7 @@ of clojure.java.io."
 
 (defn file
   "Wrapper around "
-  [path-or-url]
+  ^File [path-or-url]
   (let [filepath (if (url/url? path-or-url)
                    (-> (url/url->parts path-or-url)
                        url/parts->file-path)
@@ -90,6 +93,26 @@ of clojure.java.io."
   (with-open [^InputStream in-s (apply input-stream src args)
               ^OutputStream out-s (apply output-stream! dest args)]
     (io/copy in-s out-s)))
+
+
+(defn interlocked-copy-to-file
+  "Copy first to a temp, then do an atomic move to the destination.  This avoids
+  issues with partial files showing up where they shouldn't and a failed io operation
+  leading to incomplete results."
+  [src dest & args]
+  (resource/stack-resource-context
+   (let [temp-fname (str dest ".tmp")
+         _ (temp-file/watch-file-for-delete temp-fname)
+         dest-file (file dest)]
+     (with-open [^InputStream in-s (apply input-stream src args)
+                 ^OutputStream out-s (apply output-stream! temp-fname args)]
+       (io/copy in-s out-s))
+     (let [^File src-file (file temp-fname)]
+       (Files/move (.toPath src-file) (.toPath dest-file)
+                   (into-array CopyOption
+                               [StandardCopyOption/ATOMIC_MOVE
+                                StandardCopyOption/REPLACE_EXISTING])))
+     dest)))
 
 
 (defn ls

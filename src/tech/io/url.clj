@@ -70,10 +70,12 @@
 (defn url?
   [url]
   (if (string? url)
-    (try
-      (:protocol (url->parts url))
-      (catch Throwable e
-        false))
+    (when (or (.contains ^String url ":")
+              (.contains ^String url "/"))
+      (try
+        (:protocol (url->parts url))
+        (catch Throwable e
+          false)))
     false))
 
 
