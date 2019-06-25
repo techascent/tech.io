@@ -79,30 +79,64 @@
     (->AuthProvider request-cred-fn cred-atom src-provider)))
 
 
+(def tech-read-cred-fn
+  (delay (try
+           (let [tech-fn
+                 (parallel-req/require-resolve
+                  'tech.vault-clj.core/read-credentials)]
+             (fn [vault-path]
+               (-> (tech-fn vault-path)
+                   (get "data")
+                   (#(->> (map (fn [[k v]]
+                                 [(keyword k) v])
+                               %)
+                          (into {}))))))
+           (catch Throwable e e))))
+
+
+(def amperity-read-cred-fn
+  (delay (try
+           (parallel-req/require-resolve
+            `tech.io.amperity-vault/read-credentials)
+           (catch Throwable e e))))
+
+
+(defn read-credentials
+  [vault-path]
+  (let [cred-fns [@tech-read-cred-fn
+                  @amperity-read-cred-fn]]
+    (when (every? #(instance? Throwable %) cred-fns)
+      (log/warnf "Failed to load either techascent vault-clj: %s
+ or amperity vault-clj %s"
+                 (.getMessage ^Throwable (first cred-fns))
+                 (.getMessage ^Throwable (second cred-fns)))
+      {})
+    (when-let [vault-fn (->> cred-fns
+                             (remove #(instance? Throwable %))
+                             first)]
+      (try
+        (vault-fn vault-path)
+        (catch Throwable e
+          (log/warnf "Failed to get vault credentials from path %s:%s" vault-path e)
+          {})))))
+
+
 (defn get-vault-aws-creds
   [vault-path options]
   (log/debug (format "Request vault information: %s" vault-path))
-  (let [vault-request ((parallel-req/require-resolve 'tech.vault-clj.core/read-credentials)
-                       vault-path)
-        data (get vault-request "data")
-        vault-errors (get vault-request "errors")]
-    (when-not data
-      (throw (ex-info "Failed to access vault information:"
-                      (merge {:vault-path vault-path
-                              :vault-errors vault-errors}))))
-    (merge {:tech.aws/access-key (or (get data "access_key")
-                                     (get data "AWS_ACCESS_KEY_ID"))
-            :tech.aws/secret-key (or (get data "secret_key")
-                                     (get data "AWS_SECRET_ACCESS_KEY"))}
-           (when-let [token (or (get data "security_token")
-                                (get data "AWS_SESSION_TOKEN"))]
+  (let [data (read-credentials vault-path)]
+    (merge {:tech.aws/access-key (or (get data :access_key)
+                                     (get data :AWS_ACCESS_KEY_ID))
+            :tech.aws/secret-key (or (get data :secret_key)
+                                     (get data :AWS_SECRET_ACCESS_KEY))}
+           (when-let [token (or (get data :security_token)
+                                (get data :AWS_SESSION_TOKEN))]
              {:tech.aws/session-token token}))))
 
 
 (defn vault-aws-auth-provider
   [vault-path options]
   (auth-provider #(get-vault-aws-creds vault-path options) options))
-
 
 
 (comment
@@ -116,4 +150,6 @@
                                                :tech-vault-aws-path)
                                               {:re-request-time-ms 4000}))
 
-  ((:request-credentials-fn test-provider)))
+  (def creds ((:request-credentials-fn test-provider)))
+
+  )
