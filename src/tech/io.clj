@@ -24,7 +24,7 @@ of clojure.java.io."
   (require 'tech.io.s3))
 
 
-;;Purists or poeple using components will want to use the io-protocols directly with
+;;Purists or people using components will want to use the io-protocols directly with
 ;;providers passed in.  This API is meant to mimic clojure.java.io but in a more
 ;;extensible way.
 (def ^:dynamic *provider-fn* #(or (providers/default-provider)
