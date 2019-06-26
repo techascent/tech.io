@@ -118,11 +118,10 @@ of clojure.java.io."
 (defn ls
   "Return a directory listing.  May be recursive if desired; only works with file
 or s3 providers."
-  [url & {:keys [recursive?] :as options}]
+  [url & options]
   (lookup-provider url
-    (io-prot/ls provider url-parts
-                (assoc (args->map options)
-                       :recursive? recursive?))))
+                   (io-prot/ls provider url-parts
+                               (args->map options))))
 
 
 (defn delete!
