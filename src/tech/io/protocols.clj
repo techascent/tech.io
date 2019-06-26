@@ -21,6 +21,11 @@ desired.")
 :byte-length (optional) long"))
 
 
+;;Authentication is embedding more information in the options map
+(defprotocol IOAuth
+  (authenticate [auth url-parts options]))
+
+
 (defprotocol ICopyObject
   "Interface that allows optimized implementations assuming you want to copy an thing.
 Default implementation is provided so it is optional from a provider's perspective."

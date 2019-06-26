@@ -30,55 +30,64 @@
         :credentials)))
 
 
-(defrecord AuthProvider [request-credentials-fn
-                         credential-atom
-                         src-provider]
-  io-prot/IOProvider
-  (input-stream [provider url-parts options]
-    (io-prot/input-stream src-provider url-parts (merge (request-credentials-fn)
-                                                        options)))
-  (output-stream! [provider url-parts options]
-    (io-prot/output-stream! src-provider url-parts (merge (request-credentials-fn)
-                                                          options)))
-  (exists? [provider url-parts options]
-    (io-prot/exists? src-provider url-parts (merge (request-credentials-fn)
-                                                   options)))
-  (ls [provider url-parts options]
-    (io-prot/ls src-provider url-parts (merge (request-credentials-fn)
-                                              options)))
-  (delete! [provider url-parts options]
-    (io-prot/delete! src-provider url-parts (merge (request-credentials-fn)
-                                                   options)))
-  (metadata [provider url-parts options]
-    (io-prot/metadata src-provider url-parts (merge (request-credentials-fn)
-                                                    options)))
-
-  io-prot/ICopyObject
-  (get-object [provider url-parts options]
-    (io-prot/get-object src-provider url-parts (merge (request-credentials-fn)
-                                                      options)))
-  (put-object! [provider url-parts value options]
-    (io-prot/put-object! src-provider url-parts value (merge (request-credentials-fn)
-                                                             options))))
-
 
 (defn auth-provider
-  "You need to call com.stuartsierra.component/start on this to enable the credential
-  request system."
-  [cred-fn {:keys [
-                   ;; How long to wait for a credential request before signalling error.
-                   re-request-time-ms
-                   src-provider]
-            :or {
-                 ;;Save credentials for 20 minutes
-                 re-request-time-ms (* 20 60 1000)
-                 src-provider (cache/forwarding-provider :url-parts->provider
-                                                         io-prot/url-parts->provider)}}]
-  (let [cred-atom (atom {})
-        request-cred-fn #(get-credentials re-request-time-ms cred-fn cred-atom)]
-    (->AuthProvider request-cred-fn cred-atom src-provider)))
+  "Create an auth provider.  The basic requirement is a credential function that, called
+  with no arguments, does whatever is necessary to either get credentials or error out
+  returning a map of credentials.  If provided keys are already not nil and in the map
+  then the credential function isn't called.
+  Arguments:
+  :credential-timeout-ms - timeout of credential system.
+  :provided-keys - sequence of keys provided by credential function."
+  [cred-fn {:keys [credential-timeout-ms
+                   provided-auth-keys]
+            :or {credential-timeout-ms (* 20 60 1000)}}]
+
+  (let [cred-atom (atom {})]
+    (reify
+      io-prot/IOAuth
+      (authenticate [this url-parts options]
+        (if (and (seq provided-auth-keys)
+                 (every? #(contains? options %) provided-auth-keys))
+          options
+          (merge options
+                 (get-credentials credential-timeout-ms cred-fn cred-atom)))))))
 
 
+(defn authenticated-provider
+  "Wrap an io-provider such that the options map is augmented with authentication
+  information."
+  [src-io-provider auth-provider]
+  (reify
+    io-prot/IOProvider
+    (input-stream [provider url-parts options]
+      (io-prot/input-stream src-io-provider url-parts
+                            (io-prot/authenticate auth-provider url-parts options)))
+    (output-stream! [provider url-parts options]
+      (io-prot/output-stream! src-io-provider url-parts
+                              (io-prot/authenticate auth-provider url-parts options)))
+    (exists? [provider url-parts options]
+      (io-prot/exists? src-io-provider url-parts
+                       (io-prot/authenticate auth-provider url-parts options)))
+    (ls [provider url-parts options]
+      (io-prot/ls src-io-provider url-parts
+                  (io-prot/authenticate auth-provider url-parts options)))
+    (delete! [provider url-parts options]
+      (io-prot/delete! src-io-provider url-parts
+                       (io-prot/authenticate auth-provider url-parts options)))
+    (metadata [provider url-parts options]
+      (io-prot/metadata src-io-provider url-parts
+                        (io-prot/authenticate auth-provider url-parts options)))
+
+    io-prot/ICopyObject
+    (get-object [provider url-parts options]
+      (io-prot/get-object src-io-provider url-parts
+                          (io-prot/authenticate auth-provider url-parts options)))
+    (put-object! [provider url-parts value options]
+      (io-prot/put-object! src-io-provider url-parts value
+                           (io-prot/authenticate auth-provider url-parts options)))))
+
+;;Wrapper for techascent vault-clj - old but not yet busted
 (def tech-read-cred-fn
   (delay (try
            (let [tech-fn
@@ -93,7 +102,7 @@
                           (into {}))))))
            (catch Throwable e e))))
 
-
+;;Wrapper for amperity - new hotness
 (def amperity-read-cred-fn
   (delay (try
            (parallel-req/require-resolve
@@ -118,25 +127,34 @@
         (vault-fn vault-path)
         (catch Throwable e
           (log/warnf "Failed to get vault credentials from path %s:%s" vault-path e)
-          {})))))
+          nil)))))
+
+
+(def aws-auth-required-keys [:tech.aws/access-key
+                             :tech.aws/secret-key])
 
 
 (defn get-vault-aws-creds
   [vault-path options]
   (log/debug (format "Request vault information: %s" vault-path))
-  (let [data (read-credentials vault-path)]
+  (if-let [data (read-credentials vault-path)]
     (merge {:tech.aws/access-key (or (get data :access_key)
                                      (get data :AWS_ACCESS_KEY_ID))
             :tech.aws/secret-key (or (get data :secret_key)
                                      (get data :AWS_SECRET_ACCESS_KEY))}
            (when-let [token (or (get data :security_token)
                                 (get data :AWS_SESSION_TOKEN))]
-             {:tech.aws/session-token token}))))
+             {:tech.aws/session-token token}))
+    {}))
 
 
 (defn vault-aws-auth-provider
-  [vault-path options]
-  (auth-provider #(get-vault-aws-creds vault-path options) options))
+  [vault-path & [options]]
+  (let [options (assoc options :provided-auth-keys
+                       (or (:provided-auth-keys options)
+                           aws-auth-required-keys))]
+    (auth-provider #(get-vault-aws-creds vault-path options)
+                   options)))
 
 
 (comment
@@ -144,12 +162,10 @@
   (def test-provider (vault-aws-auth-provider "bad/vault/path"
                                               {:re-request-time-ms 1000}))
 
-  ((:request-credentials-fn test-provider))
+  (io-prot/authenticate test-provider {} {:a 1})
 
   (def test-provider (vault-aws-auth-provider (tech.config.core/get-config
                                                :tech-vault-aws-path)
                                               {:re-request-time-ms 4000}))
 
-  (def creds ((:request-credentials-fn test-provider)))
-
-  )
+  (io-prot/authenticate test-provider {} {}))

@@ -23,13 +23,6 @@
   (atom {}))
 
 
-(defn vault-auth-provider
-  [vault-path options]
-  ((parallel-req/require-resolve 'tech.io.auth/vault-aws-auth-provider)
-   (or vault-path (config/get-config :tech-vault-aws-path))
-   options))
-
-
 (defn wrap-provider
   "Works like middlewear.  But the providers have to implement it themselves; most
 general purpose (cache, redirect, auth) implement it via their src-provider member."
@@ -40,10 +33,9 @@ general purpose (cache, redirect, auth) implement it via their src-provider memb
 
 
 (defn provider-seq->wrapped-providers
-  "Given a sequence of providers, wrap them such that the first
-provider is the outer provider.  This means that data will travel
-through the sequence in a left-to-right or top-to-bottom order.
-Returns the outer provider or nil of seq is empty"
+  "Given a sequence of providers, wrap them such that the first provider is the outer
+  provider.  This means that data will travel through the sequence in a left-to-right or
+  top-to-bottom order.  Returns the outer provider or nil of seq is empty"
   [provider-seq]
   (->> provider-seq
        reverse
@@ -53,8 +45,7 @@ Returns the outer provider or nil of seq is empty"
 (def default-provider
   (memoize
    (fn []
-     (->> [[:tech-io-vault-auth #(vault-auth-provider nil {})]
-           [:tech-io-cache-local #(caching-provider nil {})]
+     (->> [[:tech-io-cache-local #(caching-provider nil {})]
            [:tech-io-redirect-local #(redirect-provider nil {})]]
           (map (fn [[config-key provider-fn]]
                  (when (config/get-config config-key)
