@@ -4,4 +4,5 @@
  :tech-io-redirect-local false
  :tech-vault-aws-path "aws/sts/core"
  :tech-io-vault-auth false
- :tech-aws-endpoint "us-west-2"}
+ :tech-aws-endpoint "us-west-2"
+ :vault-addr "https://vault.techascent.com"}
