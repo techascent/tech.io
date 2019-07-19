@@ -13,7 +13,8 @@ of clojure.java.io."
            [java.io InputStream OutputStream File]
            [java.awt.image BufferedImage]
            [java.nio.file Files Path StandardCopyOption
-            CopyOption]))
+            CopyOption]
+           [java.util UUID]))
 
 
 (set! *warn-on-reflection* true)
@@ -101,7 +102,8 @@ of clojure.java.io."
   leading to incomplete results."
   [src dest & args]
   (resource/stack-resource-context
-   (let [temp-fname (str dest ".tmp")
+   ;;Make sure the temp cannot conflict with anything else.
+   (let [temp-fname (str dest (.toString (UUID/randomUUID)))
          _ (temp-file/watch-file-for-delete temp-fname)
          dest-file (file dest)]
      (with-open [^InputStream in-s (apply input-stream src args)
