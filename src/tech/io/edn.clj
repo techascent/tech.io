@@ -34,30 +34,29 @@
 
 
 (defn put-edn!
-  [provider url-parts data options]
-  (with-open [^OutputStream out-s (io-prot/output-stream! provider url-parts options)]
+  [^OutputStream output-stream data]
+  (with-open [out-s output-stream]
     (.write out-s (edn->bytes data))))
 
 
 (defn get-edn
-  [provider url-parts options]
-  (-> (io-prot/input-stream provider url-parts options)
-      input-stream->bytes
+  [input-stream]
+  (-> (input-stream->bytes input-stream)
       (String.)
       (edn/read-string)))
 
 
 (defn put-nippy!
-  [provider url-parts data options]
-  (with-open [^OutputStream out-s (io-prot/output-stream! provider url-parts options)]
+  [output-stream data]
+  (with-open [^OutputStream out-s output-stream]
     ;;Writing frozen data is faster and leads to higher compression ratios than using
     ;;the nippy stream operators
     (.write out-s ^bytes (nippy/freeze data))))
 
 
 (defn get-nippy
-  [provider url-parts options]
-  (with-open [^InputStream in-s (io-prot/input-stream provider url-parts options)
+  [input-stream]
+  (with-open [^InputStream in-s input-stream
               byte-s (ByteArrayOutputStream.)]
     (io/copy in-s byte-s)
     (nippy/thaw (.toByteArray byte-s))))

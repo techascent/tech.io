@@ -62,27 +62,11 @@
           (spit (io/output-stream! "file://project-2.clj") proj-file)
           (io/put-object! "file://project-3.clj" (.getBytes proj-file))
           (is (= proj-file
-                 (slurp (io/input-stream (str temp-dir "/" "file" "/" "project-2.clj")))))
+                 (slurp (io/input-stream (str temp-dir "/" "file"
+                                              "/" "project-2.clj")))))
           (is (= proj-file
-                 (slurp (io/input-stream (str temp-dir "/" "file" "/" "project-3.clj"))))))))))
-
-
-;; (deftest s3-ls
-;;   (io/enable-s3!)
-;;   (temp-file/with-temp-dir
-;;     temp-dir
-;;     (io/with-provider (->> [(providers/vault-auth-provider nil {})
-;;                             (providers/caching-provider temp-dir {})]
-;;                            providers/provider-seq->wrapped-providers)
-;;       (let [result (io/ls "s3://techascent.test/")
-;;             first-file (->> result
-;;                             (remove :directory?)
-;;                             first
-;;                             :url
-;;                             io/get-object)]
-;;         ;;Caching should always return a file.
-;;         (is (instance? File first-file))
-;;         (is (> (count result) 0))))))
+                 (slurp (io/input-stream (str temp-dir "/" "file"
+                                              "/" "project-3.clj"))))))))))
 
 
 (deftest interlocked-copy-test
