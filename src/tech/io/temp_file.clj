@@ -6,7 +6,8 @@
             [clojure.string :as s]
             [tech.io.uuid :as uuid]
             [tech.io.url :as url])
-  (:import [java.io File]))
+  (:import [java.io File]
+           [java.nio.file Paths]))
 
 
 ;; We have had issues where we filled up the temporary space on the volume
@@ -16,9 +17,15 @@
 ;; be extended and used in other places and then we would have a lot more confidence
 ;; that temporary data would be cleaned up regardless of failure conditions
 
+(defn- combine-paths
+  [& args]
+    (->
+     (Paths/get (first args) (into-array String (rest args)))
+     (.toString)))
+
 (defn- random-temp-dir-str
   ^String [root]
-  (s/join File/separator [root (uuid/random-uuid-str)]))
+  (combine-paths root (uuid/random-uuid-str)))
 
 
 (defonce ^:dynamic *files-in-flight* (atom #{}))
@@ -66,10 +73,12 @@ that will be removed when the code completes (or throws an exception)."
 
 (defn random-file-url
   [& {:keys  [dirname suffix]}]
-  (url/parts->url {:protocol :file
-                   :path (concat
-                          (s/split (or dirname (system-temp-dir)) (re-pattern "/\\\\"))
-                          [(format "%s%s" (uuid/random-uuid-str) (or suffix ""))])}))
+  (url/parts->url
+   {:protocol :file
+    :path (s/split (combine-paths (or dirname (system-temp-dir))
+                                  (format "%s%s" (uuid/random-uuid-str)
+                                          (or suffix "")))
+                   (re-pattern "/\\\\"))}))
 
 
 (defn temp-resource-file
