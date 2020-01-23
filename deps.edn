@@ -5,5 +5,5 @@
         clj-commons/fs {:mvn/version "1.5.0"}
         techascent/tech.config {:mvn/version "0.3.7"}
         techascent/tech.parallel {:mvn/version "2.3"}
-        org.clojure/data.json {:mvn/version "0.2.6"}
+        org.clojure/data.json {:mvn/version "0.2.7"}
         org.clojure/data.csv {:mvn/version "0.1.4"}}}
