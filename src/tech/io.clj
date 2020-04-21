@@ -8,7 +8,6 @@ of clojure.java.io."
             [tech.io.base]
             [tech.io.temp-file :as temp-file]
             [tech.resource :as resource]
-            [tech.io.providers :as providers]
             [clojure.data.json :as json]
             [clojure.data.csv :as csv])
   (:import [javax.imageio ImageIO]
@@ -24,16 +23,10 @@ of clojure.java.io."
 (set! *warn-on-reflection* true)
 
 
-(defn enable-s3!
-  []
-  (require 'tech.io.s3))
-
-
 ;;Purists or people using components will want to use the io-protocols directly with
 ;;providers passed in.  This API is meant to mimic clojure.java.io but in a more
 ;;extensible way.
-(def ^:dynamic *provider-fn* #(or (providers/default-provider)
-                                  (io-prot/url-parts->provider %)))
+(def ^:dynamic *provider-fn* #(io-prot/url-parts->provider %))
 
 
 (defmacro with-provider-fn
@@ -128,6 +121,11 @@ of clojure.java.io."
     url
     (-> (apply output-stream! url options)
         io/writer)))
+
+
+(defn resource
+  [& args]
+  (apply io/resource args))
 
 
 (defn copy
