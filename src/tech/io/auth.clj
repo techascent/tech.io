@@ -8,8 +8,6 @@
   This layer will then catch such exceptions and attempt threadsafe reauthentication."
   (:require [tech.io.protocols :as io-prot]
             [clojure.tools.logging :as log]
-            [tech.io.cache :as cache]
-            [tech.io.url :as url]
             [tech.parallel.require :as parallel-req]))
 
 
