@@ -101,3 +101,13 @@
       (with-open [in-s (io/input-stream value)
                   out-s (io/output-stream fileme)]
         (io/copy in-s out-s)))))
+
+
+(defmethod io-prot/url-parts->provider :default
+  [& args]
+  (Object.))
+
+
+(defmethod io-prot/url-parts->provider :file
+  [url-parts]
+  (parts->file url-parts))
