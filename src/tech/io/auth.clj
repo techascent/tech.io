@@ -7,8 +7,7 @@
   (ex-info \"Doesn't matter\" {:exception-action :request-credentials}
   This layer will then catch such exceptions and attempt threadsafe reauthentication."
   (:require [tech.io.protocols :as io-prot]
-            [clojure.tools.logging :as log]
-            [tech.parallel.require :as parallel-req]))
+            [clojure.tools.logging :as log]))
 
 
 (defn get-credentials
@@ -89,8 +88,9 @@
 (def tech-read-cred-fn
   (delay (try
            (let [tech-fn
-                 (parallel-req/require-resolve
-                  'tech.vault-clj.core/read-credentials)]
+                 (locking #'authenticated-provider
+                   (requiring-resolve
+                    'tech.vault-clj.core/read-credentials))]
              (fn [vault-path]
                (-> (tech-fn vault-path)
                    (get "data")
@@ -103,8 +103,9 @@
 ;;Wrapper for amperity - new hotness
 (def amperity-read-cred-fn
   (delay (try
-           (parallel-req/require-resolve
-            `tech.io.amperity-vault/read-credentials)
+           (locking #'authenticated-provider
+             (requiring-resolve
+              `tech.io.amperity-vault/read-credentials))
            (catch Throwable e e))))
 
 
