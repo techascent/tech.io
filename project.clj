@@ -1,17 +1,33 @@
-(defproject techascent/tech.io "3.21-SNAPSHOT"
-  :description "IO abstractions to enable rapid research and prototyping."
+(defproject techascent/tech.io "3.21"
+  :description "IO abstractions to enable rapid research, prototyping, and cross cloud
+application development."
   :url "http://github.com/tech-ascent/tech.io"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :plugins [[lein-tools-deps "0.4.1"]]
-  :middleware [lein-tools-deps.plugin/resolve-dependencies-with-deps-edn]
-  :lein-tools-deps/config {:config-files [:install :user :project]}
+  :dependencies [[org.clojure/clojure "1.10.2-alpha1"]
+                 [techascent/tech.resource "4.7"]
+                 [com.taoensso/nippy "3.0.0"
+                  :exclusions [com.taoensso/encore]]
+                 [com.taoensso/encore "3.7.0"]
+                 [clj-commons/fs "1.5.2"]
+                 [techascent/tech.config "0.3.7"]
+                 [org.clojure/data.json "1.0.0"]
+                 [org.clojure/data.csv "1.0.0"]]
   :profiles {:dev {:dependencies [
                                   ;;[techascent/vault-clj "0.2.21"]
                                   [amperity/vault-clj "0.7.0"]
-                                  ]}}
-
-  ;; To test tech vault provider
-  ;; :repositories {"releases"  {:url "s3p://techascent.jars/releases/"
-  ;;                             :no-auth true}}
+                                  ]}
+             :codox
+             {:dependencies [[codox-theme-rdash "0.1.2"]]
+              :plugins [[lein-codox "0.10.7"]]
+              :codox {:project {:name "tech.io"}
+                      :metadata {:doc/format :markdown}
+                      :themes [:rdash]
+                      :source-paths ["src"]
+                      :output-path "docs"
+                      :source-uri "https://github.com/techascent/tech.io/blob/master/{filepath}#L{line}"
+                      :namespaces [tech.io
+                                   tech.io.url
+                                   tech.io.temp-file]}}}
+  :aliases {"codox" ["with-profile" "codox,dev" "codox"]}
   )

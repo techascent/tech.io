@@ -26,16 +26,16 @@ of clojure.java.io."
 ;;Purists or people using components will want to use the io-protocols directly with
 ;;providers passed in.  This API is meant to mimic clojure.java.io but in a more
 ;;extensible way.
-(def ^:dynamic *provider-fn* #(io-prot/url-parts->provider %))
+(def ^:dynamic ^:no-doc *provider-fn* #(io-prot/url-parts->provider %))
 
 
-(defmacro with-provider-fn
+(defmacro ^:no-doc with-provider-fn
   [provider-fn & body]
   `(with-bindings {#'*provider-fn* ~provider-fn }
      ~@body))
 
 
-(defmacro with-provider
+(defmacro ^:no-doc with-provider
   [provider & body]
   `(with-provider-fn (constantly ~provider) ~@body))
 
@@ -47,6 +47,7 @@ of clojure.java.io."
 
 ;;Straight forwards
 (def make-parents io/make-parents)
+(vary-meta make-parents merge (meta #'io/make-parents))
 
 
 (defn file
@@ -115,7 +116,7 @@ of clojure.java.io."
 
 
 (defn writer!
-  "Create a java.io.reader from a thing."
+  "Create a java.io.writer from a thing."
   ^Writer [url & options]
   (if (instance? Writer url)
     url
@@ -406,17 +407,3 @@ of the url or explicity via an ':extension' optional argument"
         (->> (apply csv/read-csv reader (detect-fn reader))
              (csv-sequence->mapseq opt-map)
              doall)))))
-
-
-(def ^:dynamic *enable-poor-api-naming?* true)
-
-
-(defn enable-poor-api-naming!
-  []
-  (def output-stream output-stream!)
-  (def put-object put-object!)
-  (def writer writer!))
-
-
-(when *enable-poor-api-naming?*
-  (enable-poor-api-naming!))
