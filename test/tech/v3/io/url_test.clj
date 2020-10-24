@@ -1,6 +1,6 @@
-(ns tech.io.url-test
+(ns tech.v3.io.url-test
   (:require [clojure.test :refer :all]
-            [tech.io.url :as url]))
+            [tech.v3.io.url :as url]))
 
 
 (deftest invalid-url-test

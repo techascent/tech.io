@@ -1,11 +1,11 @@
-(ns tech.io.temp-file
-  (:require [tech.resource :as resource]
-            [tech.resource.stack :as stack]
+(ns tech.v3.io.temp-file
+  (:require [tech.v3.resource :as resource]
+            [tech.v3.resource.stack :as stack]
             [clojure.java.io :as io]
             [me.raynes.fs :as fs]
             [clojure.string :as s]
-            [tech.io.uuid :as uuid]
-            [tech.io.url :as url])
+            [tech.v3.io.uuid :as uuid]
+            [tech.v3.io.url :as url])
   (:import [java.io File]
            [java.nio.file Paths]))
 
@@ -44,7 +44,7 @@
 
 (defn watch-file-for-delete
   [path-or-file]
-  (resource/track (ResourceFile. path-or-file))
+  (resource/track (ResourceFile. path-or-file) {:track-type :stack})
   path-or-file)
 
 

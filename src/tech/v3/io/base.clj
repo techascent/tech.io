@@ -1,7 +1,7 @@
-(ns tech.io.base
+(ns tech.v3.io.base
   "Basic io that handles most simple cases"
-  (:require [tech.io.protocols :as io-prot]
-            [tech.io.url :as url]
+  (:require [tech.v3.io.protocols :as io-prot]
+            [tech.v3.io.url :as url]
             [clojure.java.io :as io]
             [me.raynes.fs :as fs])
   (:import [java.io File InputStream OutputStream]

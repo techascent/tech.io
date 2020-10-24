@@ -1,7 +1,7 @@
-(ns tech.io-test
-  (:require [tech.io :as io]
-            [tech.io.temp-file :as temp-file]
-            [tech.resource :as resource]
+(ns tech.v3.io-test
+  (:require [tech.v3.io :as io]
+            [tech.v3.io.temp-file :as temp-file]
+            [tech.v3.resource :as resource]
             [clojure.test :refer [deftest is]])
   (:import [java.io File]))
 

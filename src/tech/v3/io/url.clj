@@ -1,4 +1,4 @@
-(ns tech.io.url
+(ns tech.v3.io.url
   (:require [clojure.string :as string]
             [clojure.spec.alpha :as s])
   (:import [java.net URL]

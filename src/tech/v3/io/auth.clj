@@ -1,4 +1,4 @@
-(ns tech.io.auth
+(ns tech.v3.io.auth
   "Authentication layer designed to work with hashicorp vault's aws credentialling
   system.  Given a function that takes no arguments but can produce a credential map, we
   want to store the latest version of the map but also be prepared for the current
@@ -6,7 +6,7 @@
   providers need to throw exceptions of the type:
   (ex-info \"Doesn't matter\" {:exception-action :request-credentials}
   This layer will then catch such exceptions and attempt threadsafe reauthentication."
-  (:require [tech.io.protocols :as io-prot]
+  (:require [tech.v3.io.protocols :as io-prot]
             [clojure.tools.logging :as log]))
 
 

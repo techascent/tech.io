@@ -1,9 +1,9 @@
-(ns tech.io.edn
+(ns tech.v3.io.edn
   "Get/put edn data to/from any valid io provider"
   (:require [taoensso.nippy :as nippy]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [tech.io.protocols :as io-prot])
+            [tech.v3.io.protocols :as io-prot])
   (:import [java.nio.charset Charset]
            [java.io OutputStream InputStream ByteArrayOutputStream]))
 
