@@ -105,7 +105,7 @@
   (delay (try
            (locking #'authenticated-provider
              (requiring-resolve
-              `tech.io.amperity-vault/read-credentials))
+              `tech.v3.io.amperity-vault/read-credentials))
            (catch Throwable e e))))
 
 
