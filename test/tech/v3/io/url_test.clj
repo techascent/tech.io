@@ -8,3 +8,7 @@
   (is (thrown? Throwable (url/url->parts "s3:/a/b/c")))
   (is (not (nil? (url/url->parts "s3://a/b/c"))))
   (is (not (nil? (url/url->parts "makeitup://a/b/c")))))
+
+(deftest windows-paths-are-not-urls
+  (let [p "C:\\Users\\joinr\\data\\yellow_tripdata_2016-01.csv"]
+    (is (not (boolean (url/url? p))))))
