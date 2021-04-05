@@ -1,13 +1,13 @@
-(ns tech.io
+(ns tech.v3.io
   "Wrapper for tech io subsystem designed to be drop in replacement for some use cases
 of clojure.java.io."
   (:require [clojure.java.io :as io]
-            [tech.io.url :as url]
-            [tech.io.protocols :as io-prot]
-            [tech.io.edn :as edn]
-            [tech.io.base]
-            [tech.io.temp-file :as temp-file]
-            [tech.resource :as resource]
+            [tech.v3.io.url :as url]
+            [tech.v3.io.protocols :as io-prot]
+            [tech.v3.io.edn :as edn]
+            [tech.v3.io.base]
+            [tech.v3.io.temp-file :as temp-file]
+            [tech.v3.resource :as resource]
             [clojure.data.json :as json]
             [clojure.data.csv :as csv])
   (:import [javax.imageio ImageIO]

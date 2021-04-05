@@ -1,11 +1,9 @@
-(ns tech.io.temp-file
-  (:require [tech.resource :as resource]
-            [tech.resource.stack :as stack]
-            [clojure.java.io :as io]
+(ns tech.v3.io.temp-file
+  (:require [tech.v3.resource :as resource]
             [me.raynes.fs :as fs]
             [clojure.string :as s]
-            [tech.io.uuid :as uuid]
-            [tech.io.url :as url])
+            [tech.v3.io.uuid :as uuid]
+            [tech.v3.io.url :as url])
   (:import [java.io File]
            [java.nio.file Paths]))
 
@@ -31,20 +29,15 @@
 (defonce ^:dynamic *files-in-flight* (atom #{}))
 
 
-(defrecord ResourceFile [path-or-file]
-  stack/PResource
-  (release-resource [this]
-    (let [path-or-file
-          (if (url/url? path-or-file)
-            (url/parts->file-path
-             (url/url->parts path-or-file))
-            path-or-file)]
-      (fs/delete-dir path-or-file))))
-
-
 (defn watch-file-for-delete
   [path-or-file]
-  (resource/track (ResourceFile. path-or-file))
+  (resource/track
+   #(let [path-or-file
+          (if (url/url? path-or-file)
+            (url/parts->file-path (url/url->parts path-or-file))
+            path-or-file)]
+      (fs/delete-dir path-or-file))
+   {:track-type :stack})
   path-or-file)
 
 
@@ -56,8 +49,7 @@
 (defn random-temp-dir
   [& {:keys [root]
       :or {root (system-temp-dir)}}]
-  (let [resource-dir (->ResourceFile (random-temp-dir-str root))
-        retval (:path-or-file resource-dir)]
+  (let [retval (random-temp-dir-str root)]
     (fs/mkdirs retval)
     (watch-file-for-delete retval)))
 

@@ -1,10 +1,14 @@
-(ns tech.io.url
+(ns tech.v3.io.url
   (:require [clojure.string :as s])
   (:import [java.net URL]
            [java.io File]))
 
 
 (set! *warn-on-reflection* true)
+
+
+(defn maybe-url [^String url]
+  (try (java.net.URL. url) (catch Exception e nil)))
 
 
 (defn parse-url-arguments
@@ -15,7 +19,7 @@
                  (if (>= eq-sign 0)
                    [(.substring arg-str 0 eq-sign)
                     (.substring arg-str (+ eq-sign 1))]
-                                arg-str))))))
+                   arg-str))))))
 
 
 (defn url->parts
@@ -34,9 +38,9 @@
         ^String protocol-part (first parts)
         parts (rest parts)
         path (if (= 0 (count (first parts)))
-                (rest parts)
-                (throw (ex-info (format "Unrecognized url: %s" url)
-                                {:url url})))
+               (rest parts)
+               (throw (ex-info (format "Unrecognized url: %s" url)
+                               {:url url})))
         args (when args (parse-url-arguments args))]
     {:protocol (keyword (.substring protocol-part 0 (- (count protocol-part) 1)))
      :path path
@@ -69,12 +73,9 @@
 (defn url?
   [url]
   (if (string? url)
-    (when (or (.contains ^String url ":")
-              (.contains ^String url "/"))
-      (try
-        (:protocol (url->parts url))
-        (catch Throwable e
-          false)))
+    (when (maybe-url url)
+      (try (:protocol (url->parts url))
+           (catch Throwable e false)))
     false))
 
 

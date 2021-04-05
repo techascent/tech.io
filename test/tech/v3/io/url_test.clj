@@ -1,6 +1,6 @@
-(ns tech.io.url-test
+(ns tech.v3.io.url-test
   (:require [clojure.test :refer :all]
-            [tech.io.url :as url]))
+            [tech.v3.io.url :as url]))
 
 
 (deftest invalid-url-test
@@ -8,3 +8,7 @@
   (is (thrown? Throwable (url/url->parts "s3:/a/b/c")))
   (is (not (nil? (url/url->parts "s3://a/b/c"))))
   (is (not (nil? (url/url->parts "makeitup://a/b/c")))))
+
+(deftest windows-paths-are-not-urls
+  (let [p "C:\\Users\\joinr\\data\\yellow_tripdata_2016-01.csv"]
+    (is (not (boolean (url/url? p))))))

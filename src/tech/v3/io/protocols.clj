@@ -1,4 +1,4 @@
-(ns tech.io.protocols
+(ns tech.v3.io.protocols
   "Protocols used.  In separate namespace to make development using repl a bit simpler")
 
 

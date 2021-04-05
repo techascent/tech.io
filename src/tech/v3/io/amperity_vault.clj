@@ -1,4 +1,4 @@
-(ns tech.io.amperity-vault
+(ns tech.v3.io.amperity-vault
   (:require [tech.config.core :as config]
             [vault.core :as vault]
             [vault.client.http]))
