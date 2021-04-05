@@ -48,10 +48,11 @@
 
 (defn put-nippy!
   [output-stream data]
-  (with-open [^OutputStream out-s output-stream]
-    ;;Writing frozen data is faster and leads to higher compression ratios than using
-    ;;the nippy stream operators
-    (.write out-s ^bytes (nippy/freeze data))))
+  (let [frozen (nippy/freeze data)]
+    (with-open [^OutputStream out-s output-stream]
+      ;;Writing frozen data is faster and leads to higher compression ratios than using
+      ;;the nippy stream operators
+      (.write out-s ^bytes frozen))))
 
 
 (defn get-nippy
