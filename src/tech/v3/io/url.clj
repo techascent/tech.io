@@ -1,5 +1,5 @@
 (ns tech.v3.io.url
-  (:require [clojure.string :as string])
+  (:require [clojure.string :as s])
   (:import [java.net URL]
            [java.io File]))
 
@@ -13,7 +13,7 @@
 
 (defn parse-url-arguments
   [args]
-  (->> (string/split args #"&")
+  (->> (s/split args #"&")
        (mapv (fn [^String arg-str]
                (let [eq-sign (.indexOf arg-str "=")]
                  (if (>= eq-sign 0)
@@ -34,7 +34,7 @@
                        [(.substring url 0 arg-delimiter)
                         (.substring url (+ arg-delimiter 1))]
                        [url nil]))
-        parts (string/split url #"/")
+        parts (s/split url #"/")
         ^String protocol-part (first parts)
         parts (rest parts)
         path (if (= 0 (count (first parts)))
@@ -49,7 +49,7 @@
 
 (defn- join-forward-slash
   ^String [path]
-  (string/join "/" path))
+  (s/join "/" path))
 
 
 (defn parts->url
@@ -59,7 +59,7 @@
     (str (name protocol) "://"
          (join-forward-slash path)
          "?"
-         (string/join
+         (s/join
           "&"
           (->> arguments
                (map (fn [arg]
@@ -81,11 +81,11 @@
 
 (defn string-seq->file-path
   [str-seq]
-  (string/join File/separator str-seq))
+  (s/join File/separator str-seq))
 
 
 (defn parts->file-path
-  [{:keys [protocol path arguments] :as url-parts}]
+  [{:keys [protocol path] :as url-parts}]
   (when-not (= protocol :file)
     (throw (ex-info "Not a file url" url-parts)))
   (string-seq->file-path path))

@@ -1,8 +1,2 @@
-{:tech-io-cache-dir "tech-io/cache"
- :tech-io-redirect-dir "tech-io/redirect"
- :tech-io-cache-local false
- :tech-io-redirect-local false
- :tech-vault-aws-path "aws/sts/core"
- :tech-io-vault-auth false
- :tech-aws-endpoint "us-west-2"
+{:tech-vault-aws-path "aws/sts/core"
  :vault-addr "https://vault.techascent.com"}
