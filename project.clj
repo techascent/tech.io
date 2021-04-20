@@ -5,7 +5,7 @@ application development."
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.2" :scope "provided"]
-                 [techascent/tech.resource "5.03"]
+                 [techascent/tech.resource "5.04"]
                  [com.taoensso/nippy "3.1.1"]
                  [babashka/fs "0.0.3"]
                  [techascent/tech.config "0.3.13"]
