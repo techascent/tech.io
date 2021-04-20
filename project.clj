@@ -1,4 +1,4 @@
-(defproject techascent/tech.io "4.06-SNAPSHOT"
+(defproject techascent/tech.io "4.06"
   :description "IO abstractions to enable rapid research, prototyping, and cross cloud
 application development."
   :url "http://github.com/tech-ascent/tech.io"
@@ -8,7 +8,7 @@ application development."
                  [techascent/tech.resource "5.03"]
                  [com.taoensso/nippy "3.1.1"]
                  [babashka/fs "0.0.3"]
-                 [techascent/tech.config "0.3.12"]
+                 [techascent/tech.config "0.3.13"]
                  [org.clojure/data.json "1.0.0"]
                  [org.clojure/data.csv "1.0.0"]]
   :profiles {:dev {:dependencies [
