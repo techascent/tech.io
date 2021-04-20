@@ -1,15 +1,14 @@
-(defproject techascent/tech.io "4.05-SNAPSHOT"
+(defproject techascent/tech.io "4.05"
   :description "IO abstractions to enable rapid research, prototyping, and cross cloud
 application development."
   :url "http://github.com/tech-ascent/tech.io"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.2" :scope "provided"]
-                 [techascent/tech.resource "5.02"]
-                 ;;Support for
+                 [techascent/tech.resource "5.03"]
                  [com.taoensso/nippy "3.1.1"]
-                 [clj-commons/fs "1.5.2"]
-                 [techascent/tech.config "0.3.7"]
+                 [babashka/fs "0.0.3"]
+                 [techascent/tech.config "0.3.12"]
                  [org.clojure/data.json "1.0.0"]
                  [org.clojure/data.csv "1.0.0"]]
   :profiles {:dev {:dependencies [

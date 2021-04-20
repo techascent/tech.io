@@ -167,29 +167,30 @@ an input stream and then close it."
   issues with partial files showing up where they shouldn't and a failed io operation
   leading to incomplete results."
   [src dest & options]
-  (resource/stack-resource-context
-   ;;Make sure the temp cannot conflict with anything else.
-   (let [temp-fname (str dest (.toString (UUID/randomUUID)))
-         _ (temp-file/watch-file-for-delete temp-fname)
-         dest-file (file dest)
-         opt-map (args->map options)
-         exist-check! (fn []
-                        (when (and (:error-existing? opt-map)
-                                   (apply exists? dest options))
-                          (throw (ex-info (format "File exists: %s" dest) {}))))]
-     (exist-check!)
-     (with-open [^InputStream in-s (apply input-stream src options)
-                 ^OutputStream out-s (apply output-stream! temp-fname options)]
-       (io/copy in-s out-s))
-     (let [^File src-file (file temp-fname)]
-       (exist-check!)
-       (Files/move (.toPath src-file) (.toPath dest-file)
-                   (into-array CopyOption
-                               (if (:overwrite-existing? opt-map)
-                                 [StandardCopyOption/ATOMIC_MOVE
-                                  StandardCopyOption/REPLACE_EXISTING]
-                                 [StandardCopyOption/ATOMIC_MOVE]))))
-     dest)))
+  ;;Make sure the temp cannot conflict with anything else.
+  (let [temp-fname (str dest (.toString (UUID/randomUUID)))
+        dest-file (file dest)
+        opt-map (args->map options)
+        exist-check! (fn []
+                       (when (and (:error-existing? opt-map)
+                                  (apply exists? dest options))
+                         (throw (ex-info (format "File exists: %s" dest) {}))))]
+    (exist-check!)
+    (try
+      (with-open [^InputStream in-s (apply input-stream src options)
+                  ^OutputStream out-s (apply output-stream! temp-fname options)]
+        (io/copy in-s out-s))
+      (let [^File src-file (file temp-fname)]
+        (exist-check!)
+        (Files/move (.toPath src-file) (.toPath dest-file)
+                    (into-array CopyOption
+                                (if (:overwrite-existing? opt-map)
+                                  [StandardCopyOption/ATOMIC_MOVE
+                                   StandardCopyOption/REPLACE_EXISTING]
+                                  [StandardCopyOption/ATOMIC_MOVE]))))
+      (finally
+        (.delete (java.io.File. temp-fname))))
+    dest))
 
 
 (defn metadata

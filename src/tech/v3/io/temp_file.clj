@@ -1,6 +1,6 @@
 (ns tech.v3.io.temp-file
   (:require [tech.v3.resource :as resource]
-            [me.raynes.fs :as fs]
+            [babashka.fs :as fs]
             [clojure.string :as s]
             [tech.v3.io.uuid :as uuid]
             [tech.v3.io.url :as url])
@@ -36,7 +36,7 @@
           (if (url/url? path-or-file)
             (url/parts->file-path (url/url->parts path-or-file))
             path-or-file)]
-      (fs/delete-dir path-or-file))
+      (fs/delete-tree path-or-file))
    {:track-type :stack})
   path-or-file)
 
@@ -48,9 +48,10 @@
 
 (defn random-temp-dir
   [& {:keys [root]
-      :or {root (system-temp-dir)}}]
+      :or {root (system-temp-dir)}
+      :as options}]
   (let [retval (random-temp-dir-str root)]
-    (fs/mkdirs retval)
+    (fs/create-dirs retval options)
     (watch-file-for-delete retval)))
 
 

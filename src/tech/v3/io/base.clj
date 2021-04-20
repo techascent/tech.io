@@ -3,7 +3,7 @@
   (:require [tech.v3.io.protocols :as io-prot]
             [tech.v3.io.url :as url]
             [clojure.java.io :as io]
-            [me.raynes.fs :as fs])
+            [babashka.fs :as fs])
   (:import [java.io File InputStream OutputStream]
            [java.nio.file Files LinkOption]
            [java.util Date]))
@@ -71,12 +71,12 @@
     (let [fileme (parts->file url-parts)]
       (->> (if (:recursive? options)
              (file-seq fileme)
-             (fs/list-dir fileme))
+             (fs/glob fileme "**" options))
            (map (fn [^File f]
                   {:url (str "file://" (.toString f))
                    :directory? (.isDirectory f)})))))
   (delete! [this url-parts options]
-    (fs/delete-dir this))
+    (fs/delete-tree this))
   (metadata [provider url-parts options]
     {:modify-date (file->last-modify-time provider)
      :byte-length (file->byte-length provider)}))
