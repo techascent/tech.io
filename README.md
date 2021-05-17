@@ -2,7 +2,7 @@
 
 [![Clojars Project](https://clojars.org/techascent/tech.io/latest-version.svg)](https://clojars.org/techascent/tech.io)
 
-Simple IO library to enable rapid development on at least files, http/https, s3 with optional caching.
+Simple Clojure IO library to enable rapid development on at least files, http/https, and s3.
 
 * [API Documentation](https://techascent.github.io/tech.io/)
 
