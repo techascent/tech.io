@@ -9,6 +9,12 @@
   (is (not (nil? (url/url->parts "s3://a/b/c"))))
   (is (not (nil? (url/url->parts "makeitup://a/b/c")))))
 
+
+(deftest valid-url-test
+  (is (url/url? "s3://a/b/c"))
+  (is (url/url? "https://a/b/c"))
+  (is (not (url/url? "C:\\\\Users\\\\joinr\\\\data\\\\yellow_tripdata_2016-01.csv"))))
+
 (deftest windows-paths-are-not-urls
   (let [p "C:\\Users\\joinr\\data\\yellow_tripdata_2016-01.csv"]
     (is (not (boolean (url/url? p))))))

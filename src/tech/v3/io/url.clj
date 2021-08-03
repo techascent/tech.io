@@ -8,7 +8,12 @@
 
 
 (defn maybe-url [^String url]
-  (try (java.net.URL. url) (catch Exception e nil)))
+  (re-find #"[A-Za-z0-9]+:\/\/" url)
+  ;;Leaving here to make a point.  The below fails for any url
+  ;;that doesn't have a scheme registered with the central java url
+  ;;system - such as s3 or azb.
+  #_(try (java.net.URL. url)
+         (catch Exception e nil)))
 
 
 (defn parse-url-arguments
