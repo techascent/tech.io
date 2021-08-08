@@ -140,26 +140,32 @@ of clojure.java.io."
   "Return a directory listing.  May be recursive if desired; only works with file
 or s3 providers."
   [url & options]
-  (lookup-provider url
-                   (io-prot/ls provider url-parts
-                               (args->map options))))
+  (if (url/url? url)
+    (lookup-provider url
+                     (io-prot/ls provider url-parts
+                                 (args->map options)))
+    (io-prot/ls url {:path [url]} (args->map options))))
 
 
 (defn delete!
   "Delete a resource.  Works currently with file or s3."
   [url & options]
-  (lookup-provider
-   url
-   (io-prot/delete! provider url-parts (args->map options))))
+  (if (url/url? url)
+    (lookup-provider
+     url
+     (io-prot/delete! provider url-parts (args->map options)))
+    (io-prot/delete! url {:path [url]} (args->map options))))
 
 
 (defn exists?
   "Boolean existence check.  Works with everything as fallback is to open
 an input stream and then close it."
   [url & options]
-  (lookup-provider
-   url
-   (io-prot/exists? provider url-parts (args->map options))))
+  (if (url/url? url)
+    (lookup-provider
+     url
+     (io-prot/exists? provider url-parts (args->map options)))
+    (io-prot/exists? url {:path [url]} (args->map options))))
 
 
 (defn interlocked-copy-to-file
@@ -197,8 +203,10 @@ an input stream and then close it."
   "If supported, returns at least :modify-date and :byte-length.
 Exception otherwise."
   [url & options]
-  (lookup-provider url
-    (io-prot/metadata provider url-parts options)))
+  (if (url/url? url)
+    (lookup-provider url
+                     (io-prot/metadata provider url-parts options))
+    (io-prot/metadata url {:path [url]} (args->map options))))
 
 
 (defn get-object

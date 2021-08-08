@@ -15,3 +15,10 @@
                       (str temp-dir "/" "test.clj"))]
        (is (= (slurp (io/input-stream "file://project.clj"))
               (slurp (io/input-stream dest-file))))))))
+
+
+(deftest file-based-ls
+  (let [files (io/ls "src")
+        files2 (io/ls "file://src")]
+    (is (= (count files)
+           (count files2)))))

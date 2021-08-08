@@ -5,7 +5,7 @@
             [clojure.java.io :as io]
             [babashka.fs :as fs])
   (:import [java.io File InputStream OutputStream]
-           [java.nio.file Files LinkOption]
+           [java.nio.file Files LinkOption Path]
            [java.util Date]))
 
 
@@ -37,10 +37,38 @@
 
 
 (defn parts->file
-  [url-parts]
+  ^File [url-parts]
   (when-not (= :file (:protocol url-parts))
     (throw (ex-info "Not a file" url-parts)))
   (io/file (url/parts->file-path url-parts)))
+
+
+(defn unchecked-parts->file
+  ^File [url-parts]
+  (File. (url/parts->file-path (assoc url-parts :protocol :file))))
+
+
+(defn- file-ls
+  [path options]
+  (let [path (.toString ^Object path)]
+    (if (:recursive? options)
+      (->> (file-seq (File. path))
+           (map (fn [^Path f]
+                  (io-prot/metadata (File. (.toString f))
+                                    {:protocol :file
+                                     :path [(.toString f)]}
+                                    nil))))
+      (let [path-meta (io-prot/metadata (File. path) {:protocol :file
+                                                      :path [path]}
+                                        options)]
+        (if (:directory? path-meta)
+          (let [file-data (File. path)]
+            (->> (concat [file-data]
+                         (.listFiles file-data))
+                 (map #(io-prot/metadata % {:protocol :file
+                                            :path [(.toString ^Object %)]}
+                                         nil))))
+          [path-meta])))))
 
 
 (extend-protocol io-prot/IOProvider
@@ -53,11 +81,14 @@
       true
       (catch Throwable e false)))
   (ls [this url-parts options]
-    (throw (ex-info "Unimplemented" url-parts)))
+    (let [url-parts (update url-parts :protocol #(if % % :file))]
+      (io-prot/ls (unchecked-parts->file url-parts) url-parts options)))
   (delete! [this url-parts options]
-    (throw (ex-info "Unimplemented" url-parts)))
-  (metadata [provider url-parts options] {})
-
+    (let [url-parts (update url-parts :protocol #(if % % :file))]
+      (fs/delete-tree (unchecked-parts->file url-parts) url-parts options)))
+  (metadata [provider url-parts options]
+    (let [url-parts (update url-parts :protocol #(if % % :file))]
+      (io-prot/metadata (unchecked-parts->file url-parts) url-parts options)))
   File
   (input-stream [this url-parts options]
     (io/make-input-stream (parts->file url-parts) options))
@@ -68,18 +99,15 @@
   (exists? [this url-parts options]
     (.exists ^File this))
   (ls [this url-parts options]
-    (let [fileme (parts->file url-parts)]
-      (->> (if (:recursive? options)
-             (file-seq fileme)
-             (fs/glob fileme "**" options))
-           (map (fn [^File f]
-                  {:url (str "file://" (.toString f))
-                   :directory? (.isDirectory f)})))))
+    (file-ls (parts->file url-parts) options))
   (delete! [this url-parts options]
     (fs/delete-tree this))
   (metadata [provider url-parts options]
-    {:modify-date (file->last-modify-time provider)
-     :byte-length (file->byte-length provider)}))
+    (let [f (unchecked-parts->file url-parts)]
+      {:modify-date (file->last-modify-time f)
+       :byte-length (file->byte-length f)
+       :directory? (.isDirectory f)
+       :url (str "file://" (.toString f))})))
 
 
 (extend-protocol io-prot/ICopyObject

@@ -90,7 +90,7 @@
 
 
 (defn parts->file-path
-  [{:keys [protocol path] :as url-parts}]
+  ^String [{:keys [protocol path] :as url-parts}]
   (when-not (= protocol :file)
     (throw (ex-info "Not a file url" url-parts)))
   (string-seq->file-path path))
