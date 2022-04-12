@@ -8,8 +8,7 @@ of clojure.java.io."
             [tech.v3.io.base]
             [tech.v3.io.temp-file :as temp-file]
             [tech.v3.resource :as resource]
-            [clojure.data.json :as json]
-            [clojure.data.csv :as csv])
+            [charred.api :as charred])
   (:import [javax.imageio ImageIO]
            [java.io InputStream OutputStream File Writer Reader
             BufferedInputStream]
@@ -283,7 +282,7 @@ of the url or explicity via an ':extension' optional argument"
   clojure.data.json/write."
   [url data & options]
   (with-open [^Writer writer (apply writer! url options)]
-    (apply json/write data writer options)))
+    (apply charred/write-json data writer options)))
 
 
 (defn get-json
@@ -292,7 +291,7 @@ of the url or explicity via an ':extension' optional argument"
   clojure.data.json/read"
   [url & options]
   (with-open [^Reader reader (apply reader url options)]
-    (apply json/read reader options)))
+    (apply charred/read-json reader options)))
 
 
 (defn default-csv-key-printer
@@ -325,7 +324,7 @@ of the url or explicity via an ':extension' optional argument"
         map-keys (mapv first data-keys)
         column-names (mapv second data-keys)]
     (with-open [^Writer writer (apply writer! url options)]
-      (apply csv/write-csv
+      (apply charred/write-csv
              writer
              (concat [column-names]
                      (->> map-seq
@@ -410,9 +409,9 @@ of the url or explicity via an ':extension' optional argument"
     (if (or (instance? Reader url)
             (instance? InputStream url))
       (let [reader (reader url)]
-        (->> (apply csv/read-csv reader (detect-fn reader))
+        (->> (apply charred/read-csv reader (detect-fn reader))
              (csv-sequence->mapseq opt-map)))
       (with-open [^Reader reader (apply reader url options)]
-        (->> (apply csv/read-csv reader (detect-fn reader))
+        (->> (apply charred/read-csv reader (detect-fn reader))
              (csv-sequence->mapseq opt-map)
              doall)))))
