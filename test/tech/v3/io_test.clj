@@ -22,3 +22,12 @@
         files2 (io/ls "file://src")]
     (is (= (count files)
            (count files2)))))
+
+
+(deftest put-json-test
+  (temp-file/with-temp-dir
+    temp-dir
+    (let [fname (str temp-dir "test.json")
+          data  {:a 1 :b 2}]
+      (io/put-json! fname data)
+      (is (= data (io/get-json fname :key-fn keyword))))))

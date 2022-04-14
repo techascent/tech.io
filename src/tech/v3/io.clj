@@ -282,7 +282,7 @@ of the url or explicity via an ':extension' optional argument"
   clojure.data.json/write."
   [url data & options]
   (with-open [^Writer writer (apply writer! url options)]
-    (apply charred/write-json data writer options)))
+    (apply charred/write-json writer data options)))
 
 
 (defn get-json
