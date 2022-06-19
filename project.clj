@@ -1,4 +1,4 @@
-(defproject techascent/tech.io "4.15"
+(defproject techascent/tech.io "4.16-SNAPSHOT"
   :description "IO abstractions to enable rapid research, prototyping, and cross cloud
 application development."
   :url "http://github.com/tech-ascent/tech.io"
