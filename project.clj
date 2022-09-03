@@ -1,4 +1,4 @@
-(defproject techascent/tech.io "4.17-SNAPSHOT"
+(defproject techascent/tech.io "4.17"
   :description "IO abstractions to enable rapid research, prototyping, and cross cloud
 application development."
   :url "http://github.com/tech-ascent/tech.io"
@@ -9,7 +9,7 @@ application development."
                  [com.taoensso/nippy "3.1.1"]
                  [babashka/fs "0.0.3"]
                  [techascent/tech.config "0.3.13"]
-                 [com.cnuernber/charred "1.011"]]
+                 [com.cnuernber/charred "1.012"]]
   :profiles {:dev {:dependencies [
                                   ;;[techascent/vault-clj "0.2.21"]
                                   [amperity/vault-clj "0.7.0"]
