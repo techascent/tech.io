@@ -4,7 +4,6 @@ of clojure.java.io."
   (:require [clojure.java.io :as io]
             [tech.v3.io.url :as url]
             [tech.v3.io.protocols :as io-prot]
-            [tech.v3.io.edn :as edn]
             [tech.v3.io.base]
             [tech.v3.io.temp-file :as temp-file]
             [tech.v3.resource :as resource]
@@ -229,28 +228,28 @@ The most optimizations will apply to either files or byte arrays."
   "Put edn data to a url"
   [url data & options]
   (-> (apply output-stream! url options)
-      (edn/put-edn! data)))
+      ((requiring-resolve 'tech.v3.io.edn/put-edn!) data)))
 
 
 (defn get-edn
   "Get edn data from a url"
   [url & options]
   (-> (apply input-stream url options)
-      edn/get-edn))
+      (requiring-resolve 'tech.v3.io.edn/get-edn)))
 
 
 (defn put-nippy!
   "Put nippy data to a url"
   [url data & options]
   (-> (apply output-stream! url options)
-      (edn/put-nippy! data)))
+      ((requiring-resolve 'tech.v3.io.edn/put-nippy!) data)))
 
 
 (defn get-nippy
   "Get nippy data from a url"
   [url & options]
   (-> (apply input-stream url options)
-      edn/get-nippy))
+      (requiring-resolve 'tech.v3.io.edn/get-nippy)))
 
 
 (defn put-image!

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+
+scripts/run-tests
+clj -T:build jar
+cp target/classes/META-INF/maven/techascent/tech.io/pom.xml .
+clj -X:install

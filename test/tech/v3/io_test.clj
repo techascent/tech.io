@@ -11,9 +11,9 @@
    (temp-file/with-temp-dir
      temp-dir
      (let [dest-file (io/interlocked-copy-to-file
-                      "project.clj"
+                      "deps.edn"
                       (str temp-dir "/" "test.clj"))]
-       (is (= (slurp (io/input-stream "file://project.clj"))
+       (is (= (slurp (io/input-stream "file://deps.edn"))
               (slurp (io/input-stream dest-file))))))))
 
 
