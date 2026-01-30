@@ -3,7 +3,7 @@
         com.taoensso/nippy {:mvn/version "3.6.0"}
         babashka/fs {:mvn/version "0.5.30"}
         techascent/tech.config {:mvn/version "0.3.13"}
-        com.cnuernber/charred {:mvn/version "1.037"}}
+        com.cnuernber/charred {:mvn/version "1.038"}}
  :aliases
  {;; Run with clj -T:build function-in-build
   :codox
