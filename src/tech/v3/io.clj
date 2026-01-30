@@ -249,7 +249,7 @@ The most optimizations will apply to either files or byte arrays."
   "Get nippy data from a url"
   [url & options]
   (-> (apply input-stream url options)
-      (requiring-resolve 'tech.v3.io.edn/get-nippy)))
+      ((requiring-resolve 'tech.v3.io.edn/get-nippy))))
 
 
 (defn put-image!

@@ -14,7 +14,7 @@
    :exec-fn codox.main/-main
    :exec-args {:group-id "techascent"
                :artifact-id "tech.io"
-               :version "4.32"
+               :version "4.33"
                :name "tech.io"
                :description "extensible url-based io system"
                :metadata {:doc/format :markdown}
