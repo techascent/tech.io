@@ -6,10 +6,10 @@ of clojure.java.io."
             [tech.v3.io.protocols :as io-prot]
             [tech.v3.io.base]
             [tech.v3.io.temp-file :as temp-file]
+            [tech.v3.io.common :refer [args->map]]
             [tech.v3.resource :as resource]
             [charred.api :as charred])
-  (:import [javax.imageio ImageIO]
-           [java.io InputStream OutputStream File Writer Reader
+  (:import [java.io InputStream OutputStream File Writer Reader
             BufferedInputStream]
            [java.awt.image BufferedImage]
            [java.nio.file Files Path StandardCopyOption
@@ -36,11 +36,6 @@ of clojure.java.io."
 (defmacro ^:no-doc with-provider
   [provider & body]
   `(with-provider-fn (constantly ~provider) ~@body))
-
-
-(defn- args->map
-  [args]
-  (apply hash-map args))
 
 
 ;;Straight forwards
@@ -254,25 +249,13 @@ The most optimizations will apply to either files or byte arrays."
 
 (defn put-image!
   "Will throw if an image with transparency is used to write a jpeg"
-  [url image & options]
-  (let [opt-map (args->map options)
-        ^String ext (or (:extension opt-map)
-                        (url/extension url))]
-    (when-not (or (string? url)
-                  (:extension opt-map))
-      (throw (ex-info "Image type must be specified by either the extension
-of the url or explicity via an ':extension' optional argument"
-                      {})))
-    (with-open [^OutputStream out-s (apply output-stream! url options)]
-      (ImageIO/write ^BufferedImage image
-                     ext
-                     out-s))))
+  [url image & {:as options}]
+  ((requiring-resolve 'tech.v3.io.image/put-image!) url image output-stream! options))
 
 
 (defn get-image
-  [url & options]
-  (with-open [^InputStream in-s (apply input-stream url options)]
-    (ImageIO/read ^InputStream in-s)))
+  [url & {:as options}]
+  ((requiring-resolve 'tech.v3.io.image/get-image) url input-stream options))
 
 
 (defn put-json!
